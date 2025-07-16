@@ -5,7 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "docker-compose up --build"
+    "start": "docker-compose up --build",
+    "lint:client": "npm run lint --prefix client",
+    "lint:server": "npm run lint --prefix server",
+    "lint": "npm run lint:client && npm run lint:server",
+    "test:client": "npm run test --prefix client",
+    "test:server": "npm run test --prefix server",
+    "check": "npm run lint && npm run test:client && npm run test:server"
   },
   "author": "",
   "license": "ISC"

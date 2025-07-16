@@ -1,9 +1,20 @@
-import { Controller, Get } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
-@Controller('api')
-export class AppController {
-  @Get('hello')
-  getHello(): string {
-    return 'Hello from NestJS!';
-  }
-}
+describe('AppController', () => {
+  let appController: AppController;
+
+  beforeEach(async () => {
+    const moduleRef: TestingModule = await Test.createTestingModule({
+      controllers: [AppController],
+      providers: [AppService], // ✅ Add this line
+    }).compile();
+
+    appController = moduleRef.get<AppController>(AppController);
+  });
+
+  it('should return "Hello World!"', () => {
+    expect(appController.getHello()).toBe('Hello World!');
+  });
+});
