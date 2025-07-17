@@ -54,3 +54,14 @@ coverage/
 
 # Diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Ignore these accidentally generated files
+[backend] server
+[frontend] server
+= server
+CACHED server
+exporting server
+naming server
+
+# Or ignore all files that end with "server"
+* server

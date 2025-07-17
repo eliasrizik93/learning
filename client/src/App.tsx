@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import './App.css';
+import CatForm from './CatForm';
 
 function App() {
   const [message, setMessage] = useState('');
@@ -12,7 +13,7 @@ function App() {
 
   return (
     <>
-      <div>{message}</div>
+      <div>{<CatForm />}</div>
     </>
   );
 }
