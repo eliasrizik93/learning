@@ -1,21 +1,9 @@
-import { useEffect, useState } from 'react';
-
 import './App.css';
-import CatForm from './CatForm';
+
+import ChatPage from './Components/Chat/ChatPage';
 
 function App() {
-  const [message, setMessage] = useState('');
-  useEffect(() => {
-    fetch('http://localhost:3000/api/hello')
-      .then((res) => res.text())
-      .then(setMessage);
-  }, []);
-
-  return (
-    <>
-      <div>{<CatForm />}</div>
-    </>
-  );
+  return <>{<ChatPage />}</>;
 }
 
 export default App;

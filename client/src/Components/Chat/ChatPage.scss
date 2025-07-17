@@ -1,0 +1,12 @@
+@import '../../styles/variables';
+
+.chat-container {
+  background-color: $danger;
+  height: 100vh;
+  .messages {
+    height: 80%;
+    .message-input {
+      width: 100%;
+    }
+  }
+}
