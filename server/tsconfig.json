@@ -22,3 +22,4 @@
   "include": ["src/**/*.ts", "prisma/**/*.ts"], // ✅ ENSURE prisma client types are picked up
   "exclude": ["node_modules", "dist", "test"]
 }
+// force update
