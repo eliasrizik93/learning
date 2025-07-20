@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { CatsModule } from './cat/cats.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { UserModule } from './user/user.module';
+import { DatabaseModule } from './database/database.module';
+
 @Module({
-  imports: [
-    MongooseModule.forRoot(
-      `mongodb+srv://eliasrizik93:IFKcb08CcdDo7LqN@eduassigncluster.mdcapra.mongodb.net/learning?retryWrites=true&w=majority&appName=EduAssignCluster`,
-    ),
-    CatsModule,
-  ],
-  controllers: [],
-  providers: [],
+  imports: [UserModule, DatabaseModule],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

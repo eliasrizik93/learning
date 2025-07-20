@@ -1,6 +1,31 @@
-version: '3.8'
-
 services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: elias123
+      POSTGRES_DB: learningdb
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+      - '5555:5555' # for Prisma Studio
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    env_file:
+      - ./server/.env
+    depends_on:
+      - postgres
+    command: npm run start:dev
+
   frontend:
     build:
       context: ./client
@@ -12,13 +37,5 @@ services:
       - /app/node_modules
     command: npm run dev
 
-  backend:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
-    volumes:
-      - ./server:/app
-      - /app/node_modules
-    command: npm run start:dev
+volumes:
+  pgdata:

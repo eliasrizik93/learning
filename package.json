@@ -1,4 +1,7 @@
 {
+  "dependencies": {
+    "@nestjs/mapped-types": "*"
+  },
   "name": "learning",
   "version": "1.0.0",
   "description": "test",
@@ -6,6 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "docker-compose up --build",
+    "start:all": "docker-compose up --build -d && docker-compose exec backend npx prisma db push && docker-compose exec backend npx prisma studio",
+    "studio": "docker-compose exec backend npx prisma studio",
     "lint:client": "npm run lint --prefix client",
     "lint:server": "npm run lint --prefix server",
     "lint": "npm run lint:client && npm run lint:server",

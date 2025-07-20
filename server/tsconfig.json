@@ -1,21 +1,24 @@
 {
   "compilerOptions": {
+    "target": "ES2023",
     "module": "commonjs",
+    "moduleResolution": "node", // ✅ ADD THIS
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
+    "strict": true, // ✅ ENABLE STRICT MODE (for full type checking)
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noImplicitAny": true, // ✅ DISALLOW `any`
+    "esModuleInterop": true // ✅ ENSURE COMPATIBILITY
+  },
+  "include": ["src/**/*.ts", "prisma/**/*.ts"], // ✅ ENSURE prisma client types are picked up
+  "exclude": ["node_modules", "dist", "test"]
 }
