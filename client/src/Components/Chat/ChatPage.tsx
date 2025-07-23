@@ -11,7 +11,7 @@ export default function ChatPage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        message: 'Hello from React!',
+        message: message,
       }),
     });
 
@@ -27,8 +27,12 @@ export default function ChatPage() {
         <TextareaAutosize
           className='message-input'
           minRows={3}
-          style={{ width: 200 }}
+          maxRows={3} // ✅ prevents growing
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          style={{ width: 200, resize: 'none' }}
         />
+
         <Button variant='contained' onClick={sendMessage}>
           Send
         </Button>
