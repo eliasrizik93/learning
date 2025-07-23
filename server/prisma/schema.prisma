@@ -12,3 +12,9 @@ model User {
   email String  @unique
   name  String?
 }
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  message   String
+  createdAt DateTime @default(now())
+}

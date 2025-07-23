@@ -17,7 +17,8 @@
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true, // ✅ DISALLOW `any`
-    "esModuleInterop": true // ✅ ENSURE COMPATIBILITY
+    "esModuleInterop": true, // ✅ ENSURE COMPATIBILITY
+    "strictPropertyInitialization": false
   },
   "include": ["src/**/*.ts", "prisma/**/*.ts"], // ✅ ENSURE prisma client types are picked up
   "exclude": ["node_modules", "dist", "test"]
