@@ -2,6 +2,24 @@ import { Button, Input, TextareaAutosize } from '@mui/material';
 import { useState } from 'react';
 import Message from './Message/Message';
 
+type MessageType = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  content: string;
+  profile: string;
+  date: string;
+  reactions?: { emoji: string; by: string }[];
+  attachments?: {
+    type: 'image' | 'file' | 'video';
+    url: string;
+    name?: string;
+  }[];
+  isDeleted?: boolean;
+  status?: 'sent' | 'delivered' | 'read';
+  edited?: boolean;
+};
+
 export default function ChatPage() {
   const [message, setMessage] = useState('');
 
