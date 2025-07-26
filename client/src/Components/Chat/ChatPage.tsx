@@ -1,5 +1,6 @@
 import { Button, Input, TextareaAutosize } from '@mui/material';
 import { useState } from 'react';
+import Message from './Message/Message';
 
 export default function ChatPage() {
   const [message, setMessage] = useState('');
@@ -22,7 +23,9 @@ export default function ChatPage() {
 
   return (
     <div className='chat-container'>
-      <div className='messages'>messages</div>
+      <div className='messages'>
+        <Message />
+      </div>
       <div>
         <TextareaAutosize
           className='message-input'
