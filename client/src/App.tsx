@@ -1,9 +1,9 @@
 import './App.css';
 
-import ChatPage from './Components/Chat/ChatPage';
+import SignIn from './Components/SignIn/SignIn';
 
 function App() {
-  return <>{<ChatPage />}</>;
+  return <>{<SignIn />}</>;
 }
 
 export default App;
