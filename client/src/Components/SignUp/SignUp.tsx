@@ -7,8 +7,12 @@ import {
   Paper,
 } from '@mui/material';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { signupUser } from '../../store/slices/AuthSlice';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '../../store/store';
 
 const SignUp = () => {
+  const dispatch = useDispatch() as AppDispatch;
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [errors, setErros] = useState({ name: '', email: '', password: '' });
 
@@ -36,7 +40,7 @@ const SignUp = () => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log('form submitted', form);
+      dispatch(signupUser(form));
       const tempValue = { name: '', email: '', password: '' };
       setForm(tempValue);
     }

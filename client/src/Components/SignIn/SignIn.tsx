@@ -7,14 +7,19 @@ import {
   Typography,
 } from '@mui/material';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import type { AppDispatch } from '../../store/store';
+import { useDispatch } from 'react-redux';
+import { loginUser } from '../../store/slices/AuthSlice';
 
 const SignIn = () => {
+  const dispatch = useDispatch() as AppDispatch;
+
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    dispatch(loginUser(form));
     setForm({ email: '', password: '' });
-    console.log('submit');
   };
   const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
