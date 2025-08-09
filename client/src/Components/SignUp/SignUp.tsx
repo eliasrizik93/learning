@@ -7,7 +7,7 @@ import {
   Paper,
 } from '@mui/material';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { signupUser } from '../../store/slices/AuthSlice';
+import { signupUser } from '../../store/slices/authSlice';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../store/store';
 

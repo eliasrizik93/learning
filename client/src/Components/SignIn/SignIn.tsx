@@ -9,7 +9,7 @@ import {
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import type { AppDispatch } from '../../store/store';
 import { useDispatch } from 'react-redux';
-import { loginUser } from '../../store/slices/AuthSlice';
+import { loginUser } from '../../store/slices/authSlice';
 
 const SignIn = () => {
   const dispatch = useDispatch() as AppDispatch;

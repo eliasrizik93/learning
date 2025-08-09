@@ -6,6 +6,7 @@ import {
 
 interface AuthState {
   user: null | User;
+  isAuth: boolean;
   token: string | null;
   loading: boolean;
   error: string | null;
@@ -13,11 +14,13 @@ interface AuthState {
 
 type User = {
   id: number;
+  name: string;
   email: string;
   createdAt: string;
 };
 const initialState: AuthState = {
   user: null,
+  isAuth: false,
   token: null,
   loading: false,
   error: null,
@@ -65,6 +68,7 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
+      state.isAuth = false;
       state.token = null;
       localStorage.removeItem('token');
     },
@@ -80,6 +84,7 @@ const authSlice = createSlice({
         (state, action: PayloadAction<{ user: User; token: string }>) => {
           state.loading = false;
           state.user = action.payload.user;
+          state.isAuth = true;
           state.token = action.payload.token;
           localStorage.setItem('token', action.payload.token);
         }
@@ -97,6 +102,7 @@ const authSlice = createSlice({
         (state, action: PayloadAction<{ user: User; token: string }>) => {
           state.loading = false;
           state.user = action.payload.user;
+          state.isAuth = true;
           state.token = action.payload.token;
           localStorage.setItem('token', action.payload.token);
         }
