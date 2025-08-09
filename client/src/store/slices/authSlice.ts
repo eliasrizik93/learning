@@ -10,6 +10,7 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
+  hydrated: boolean;
 }
 
 type User = {
@@ -24,7 +25,15 @@ const initialState: AuthState = {
   token: null,
   loading: false,
   error: null,
+  hydrated: false,
 };
+
+export const hydrateAuth = createAsyncThunk('auth/hydrateAuth', async () => {
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? (JSON.parse(userStr) as User) : null;
+  return { token, user };
+});
 
 export const signupUser = createAsyncThunk(
   'auth/signupUser',
@@ -71,6 +80,7 @@ const authSlice = createSlice({
       state.isAuth = false;
       state.token = null;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
   },
   extraReducers: (builder) => {
@@ -87,6 +97,7 @@ const authSlice = createSlice({
           state.isAuth = true;
           state.token = action.payload.token;
           localStorage.setItem('token', action.payload.token);
+          localStorage.setItem('user', JSON.stringify(action.payload.user));
         }
       )
       .addCase(signupUser.rejected, (state, action) => {
@@ -105,11 +116,21 @@ const authSlice = createSlice({
           state.isAuth = true;
           state.token = action.payload.token;
           localStorage.setItem('token', action.payload.token);
+          localStorage.setItem('user', JSON.stringify(action.payload.user));
         }
       )
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(hydrateAuth.fulfilled, (state, { payload }) => {
+        state.token = payload.token;
+        state.user = payload.user;
+        state.isAuth = Boolean(payload.token && payload.user);
+        state.hydrated = true;
+      })
+      .addCase(hydrateAuth.rejected, (state) => {
+        state.hydrated = true;
       });
   },
 });
