@@ -17,7 +17,10 @@ type User = {
   id: number;
   name: string;
   email: string;
+  profile?: string | null;
+  birthday?: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 const initialState: AuthState = {
   user: null,
@@ -37,7 +40,16 @@ export const hydrateAuth = createAsyncThunk('auth/hydrateAuth', async () => {
 
 export const signupUser = createAsyncThunk(
   'auth/signupUser',
-  async (data: { email: string; password: string; name: string }, thunkAPI) => {
+  async (
+    data: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      birthday?: string;
+    },
+    thunkAPI
+  ) => {
     const res = await fetch('http://localhost:3000/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,7 +60,6 @@ export const signupUser = createAsyncThunk(
       const error = await res.text();
       return thunkAPI.rejectWithValue(error);
     }
-
     return await res.json();
   }
 );

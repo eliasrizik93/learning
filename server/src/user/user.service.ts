@@ -11,14 +11,22 @@ export class UserService {
     createUserDto: CreateUserDto,
   ): Promise<Omit<User, 'password'>> {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    const fullName =
+      `${createUserDto.firstName} ${createUserDto.lastName}`.trim();
+
     const user = await this.databaseService.user.create({
       data: {
         email: createUserDto.email,
-        name: createUserDto.name,
+        name: fullName,
         password: hashedPassword,
+        profile: createUserDto.profile ?? undefined,
+        birthday: createUserDto.birthday
+          ? new Date(createUserDto.birthday)
+          : undefined,
       },
     });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
