@@ -15,7 +15,7 @@ const SignIn = () => {
   const dispatch = useDispatch() as AppDispatch;
 
   const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
+  // const [error, setError] = useState('');
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     dispatch(loginUser(form));
