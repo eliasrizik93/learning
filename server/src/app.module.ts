@@ -6,9 +6,17 @@ import { DatabaseModule } from './database/database.module';
 import { MessageModule } from './message/message.module';
 import { AuthModule } from './auth/auth.module';
 import { GroupModule } from './group/group.module';
+import { CardModule } from './card/card.module';
 
 @Module({
-  imports: [AuthModule, UserModule, MessageModule, GroupModule, DatabaseModule],
+  imports: [
+    AuthModule,
+    UserModule,
+    MessageModule,
+    GroupModule,
+    CardModule,
+    DatabaseModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

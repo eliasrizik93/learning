@@ -35,11 +35,11 @@ model Card {
   id        Int      @id @default(autoincrement())
   question  String
   answer    String
+  date      DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  groupId String
-  group   Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@index([groupId])
 }
