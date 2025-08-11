@@ -36,6 +36,9 @@ const Navbar = () => {
             <Button component={NavLink} to='/dashboard' color='inherit'>
               Dashboard
             </Button>
+            <Button component={NavLink} to='/flashcards' color='inherit'>
+              Flashcards
+            </Button>
             <Box
               sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 2 }}
             >

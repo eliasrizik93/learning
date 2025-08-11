@@ -8,6 +8,7 @@ import RequireAuth from './Components/RequireAuth/RequireAuth';
 import Dashboard from './Components/Dashboard/Dashboard';
 import PublicOnly from './Components/PublicOnly/PublicOnly';
 import Home from './Components/Home/Home';
+import Flashcards from './Components/Flashcards/Flashcards';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         </Route>
         <Route element={<RequireAuth />}>
           <Route path='dashboard' element={<Dashboard />} />
+          <Route path='flashcards' element={<Flashcards />} />
         </Route>
       </Route>
     </Routes>
