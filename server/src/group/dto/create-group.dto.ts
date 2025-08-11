@@ -1,13 +1,5 @@
-import { IsInt, IsString, Length, Min } from 'class-validator';
-import { Type } from 'class-transformer';
-
+// create-group.dto.ts
 export class CreateGroupDto {
-  @IsString()
-  @Length(1, 120)
-  name!: string;
-
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  userId!: number;
+  name: string;
+  userId: number;
 }

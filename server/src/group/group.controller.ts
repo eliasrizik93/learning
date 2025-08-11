@@ -2,7 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { GroupService } from './group.service';
 
-@Controller('groups')
+@Controller('group')
 export class GroupController {
   constructor(private readonly groupsService: GroupService) {}
 

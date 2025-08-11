@@ -28,7 +28,7 @@ model Group {
   cards     Card[]
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
-
+  @@unique([userId, name])
   @@index([name]) 
 }
 model Card {
