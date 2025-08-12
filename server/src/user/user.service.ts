@@ -33,8 +33,11 @@ export class UserService {
 
   async getAllUsers(): Promise<Omit<User, 'password'>[]> {
     const users = await this.databaseService.user.findMany();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return users.map(({ password, ...user }) => user);
+    return users.map((user: User) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
   }
 
   async getUserById(id: number): Promise<Omit<User, 'password'> | null> {
