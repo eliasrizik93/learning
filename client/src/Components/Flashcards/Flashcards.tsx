@@ -554,253 +554,7 @@ const flashcards: Group[] = [
     createdAt: '2025-08-09T00:00:00Z',
     updatedAt: '2025-08-09T00:00:00Z',
     userId: '3',
-    groups: [
-      {
-        id: '12131231',
-        name: 'Subgroup 3-1',
-        createdAt: '2025-08-09T00:00:00Z',
-        updatedAt: '2025-08-09T00:00:00Z',
-        userId: '3',
-        cards: [
-          {
-            id: '51',
-            question: 'Question 3-11-1',
-            answer: 'Answer for question 3-11-1',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '11',
-          },
-          {
-            id: '52',
-            question: 'Question 3-11-2',
-            answer: 'Answer for question 3-11-2',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '11',
-          },
-          {
-            id: '53',
-            question: 'Question 3-11-3',
-            answer: 'Answer for question 3-11-3',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '11',
-          },
-          {
-            id: '54',
-            question: 'Question 3-11-4',
-            answer: 'Answer for question 3-11-4',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '11',
-          },
-          {
-            id: '55',
-            question: 'Question 3-11-5',
-            answer: 'Answer for question 3-11-5',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '11',
-          },
-        ],
-      },
-      {
-        id: '111qqw2',
-        name: 'Subgroup 3-2',
-        createdAt: '2025-08-09T00:00:00Z',
-        updatedAt: '2025-08-09T00:00:00Z',
-        userId: '3',
-        cards: [
-          {
-            id: '56',
-            question: 'Question 3-12-1',
-            answer: 'Answer for question 3-12-1',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '12',
-          },
-          {
-            id: '57',
-            question: 'Question 3-12-2',
-            answer: 'Answer for question 3-12-2',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '12',
-          },
-          {
-            id: '58',
-            question: 'Question 3-12-3',
-            answer: 'Answer for question 3-12-3',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '12',
-          },
-          {
-            id: '59',
-            question: 'Question 3-12-4',
-            answer: 'Answer for question 3-12-4',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '12',
-          },
-          {
-            id: '60',
-            question: 'Question 3-12-5',
-            answer: 'Answer for question 3-12-5',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '12',
-          },
-        ],
-      },
-      {
-        id: '1werew3',
-        name: 'Subgroup 3-3',
-        createdAt: '2025-08-09T00:00:00Z',
-        updatedAt: '2025-08-09T00:00:00Z',
-        userId: '3',
-        cards: [
-          {
-            id: '61',
-            question: 'Question 3-13-1',
-            answer: 'Answer for question 3-13-1',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '13',
-          },
-          {
-            id: '62',
-            question: 'Question 3-13-2',
-            answer: 'Answer for question 3-13-2',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '13',
-          },
-          {
-            id: '63',
-            question: 'Question 3-13-3',
-            answer: 'Answer for question 3-13-3',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '13',
-          },
-          {
-            id: '64',
-            question: 'Question 3-13-4',
-            answer: 'Answer for question 3-13-4',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '13',
-          },
-          {
-            id: '65',
-            question: 'Question 3-13-5',
-            answer: 'Answer for question 3-13-5',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '13',
-          },
-        ],
-      },
-      {
-        id: 'qweqwa14',
-        name: 'Subgroup 3-4',
-        createdAt: '2025-08-09T00:00:00Z',
-        updatedAt: '2025-08-09T00:00:00Z',
-        userId: '3',
-        cards: [
-          {
-            id: '66',
-            question: 'Question 3-14-1',
-            answer: 'Answer for question 3-14-1',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '14',
-          },
-          {
-            id: '67',
-            question: 'Question 3-14-2',
-            answer: 'Answer for question 3-14-2',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '14',
-          },
-          {
-            id: '68',
-            question: 'Question 3-14-3',
-            answer: 'Answer for question 3-14-3',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '14',
-          },
-          {
-            id: '69',
-            question: 'Question 3-14-4',
-            answer: 'Answer for question 3-14-4',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '14',
-          },
-          {
-            id: '70',
-            question: 'Question 3-14-5',
-            answer: 'Answer for question 3-14-5',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '14',
-          },
-        ],
-      },
-      {
-        id: '1233sq5',
-        name: 'Subgroup 3-5',
-        createdAt: '2025-08-09T00:00:00Z',
-        updatedAt: '2025-08-09T00:00:00Z',
-        userId: '3',
-        cards: [
-          {
-            id: '71',
-            question: 'Question 3-15-1',
-            answer: 'Answer for question 3-15-1',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '15',
-          },
-          {
-            id: '72',
-            question: 'Question 3-15-2',
-            answer: 'Answer for question 3-15-2',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '15',
-          },
-          {
-            id: '73',
-            question: 'Question 3-15-3',
-            answer: 'Answer for question 3-15-3',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '15',
-          },
-          {
-            id: '74',
-            question: 'Question 3-15-4',
-            answer: 'Answer for question 3-15-4',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '15',
-          },
-          {
-            id: '75',
-            question: 'Question 3-15-5',
-            answer: 'Answer for question 3-15-5',
-            createdAt: '2025-08-09T00:00:00Z',
-            updatedAt: '2025-08-09T00:00:00Z',
-            groupId: '15',
-          },
-        ],
-      },
-    ],
+    groups: [],
   },
   {
     id: '44232',
@@ -1319,11 +1073,7 @@ const Flashcards = () => {
   const toggleExpand = (id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
@@ -1331,6 +1081,7 @@ const Flashcards = () => {
   return (
     <div className='p-4'>
       <h1 className='text-2xl font-bold mb-4'>Flashcard Groups</h1>
+
       <TableContainer component={Paper}>
         <Table
           sx={{ minWidth: 650 }}
@@ -1339,15 +1090,14 @@ const Flashcards = () => {
         >
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: '60px' }}></TableCell>
+              <TableCell sx={{ pl: -53 }} />
               <TableCell>Name</TableCell>
-              <TableCell align='right' sx={{ width: '120px' }}>
-                Total Cards
-              </TableCell>
-              <TableCell sx={{ width: '120px' }}>Updated At</TableCell>
-              <TableCell sx={{ width: '80px' }}>Actions</TableCell>
+              <TableCell align='right'>Total Cards</TableCell>
+              <TableCell>Updated At</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
             {flashCards.map((group) => {
               const isOpen = expanded.has(group.id);
