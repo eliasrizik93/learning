@@ -11,12 +11,13 @@ export class GroupService {
 
   async createGroup(
     createGroupDto: CreateGroupDto,
+    userId: number,
   ): Promise<{ success: boolean; data?: Group; message?: string }> {
     try {
       const group = await this.databaseService.group.create({
         data: {
           name: createGroupDto.name,
-          userId: createGroupDto.userId,
+          userId,
         },
       });
       return { success: true, data: group };
@@ -31,8 +32,11 @@ export class GroupService {
           JSON.stringify(err),
         );
       }
-
       return { success: false, message: msg };
     }
+  }
+  async getAllGroups(): Promise<Group[]> {
+    const groups = await this.databaseService.group.findMany();
+    return groups;
   }
 }

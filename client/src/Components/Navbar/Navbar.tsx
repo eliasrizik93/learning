@@ -6,10 +6,8 @@ import { logout as logoutAction } from '../../store/slices/authSlice';
 
 const Navbar = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { isAuth, name } = useSelector((state: RootState) => ({
-    isAuth: state.auth.isAuth,
-    name: state.auth.user?.name,
-  }));
+  const isAuth = useSelector((state: RootState) => state.auth.isAuth);
+  const name = useSelector((state: RootState) => state.auth.user?.name);
 
   const handleLogout = () => {
     dispatch(logoutAction());

@@ -17,8 +17,8 @@ type User = {
   id: number;
   name: string;
   email: string;
-  profile?: string | null;
-  birthday?: string | null;
+  profile: string | null;
+  birthday: string | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -2,6 +2,7 @@
 import type { Group } from '../Flashcards';
 import { Box, IconButton, TableCell, TableRow } from '@mui/material';
 import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
+import type { GroupType } from '../../../store/slices/groupSlice';
 
 type GroupTableProps = {
   group: Group;
@@ -20,15 +21,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
 }) => {
   const { id, name, updatedAt, groups } = group;
 
-  const getTotalCards = (g: Group): number => {
-    let total = g.cards ? g.cards.length : 0; // <-- use the parameter, not outer scope
-    if (g.groups && g.groups.length) {
-      total += g.groups.reduce((sum, sub) => sum + getTotalCards(sub), 0);
-    }
-    return total;
-  };
-
-  const totalCards = getTotalCards(group);
+  const totalCards = group.cards?.length;
   const hasChildren = !!(groups && groups.length > 0);
 
   const getBackgroundColor = (lvl: number) =>
@@ -42,6 +35,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
         sx={{
           backgroundColor: getBackgroundColor(level),
           '&:hover': { backgroundColor: '#d3d3d3' },
+          cursor: 'pointer',
         }}
       >
         <TableCell>
@@ -73,7 +67,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
 
       {isOpen &&
         hasChildren &&
-        groups!.map((child) => {
+        groups!.map((child: GroupType) => {
           const childIsOpen = expanded.has(child.id);
           return (
             <GroupTable
