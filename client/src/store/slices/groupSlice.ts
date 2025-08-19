@@ -14,14 +14,15 @@ export type GroupType = {
   createdAt: string;
   updatedAt: string;
   userId: number;
+  groups?: GroupType[];
   cards: CardType[];
 };
 
-type GroupState = {
+export interface GroupState {
   groupsList: GroupType[];
   loading: boolean;
   error: string | null;
-};
+}
 
 const initialState: GroupState = {
   groupsList: [],
@@ -92,6 +93,38 @@ export const getAllGroups = createAsyncThunk<
   }
 });
 
+export const addCardToGroup = createAsyncThunk<
+  CardType,
+  { groupId: string; question: string; answer: string },
+  { state: RootState; rejectValue: string }
+>('groups/addCard', async (payload, thunkAPI) => {
+  try {
+    const res = await apiFetch(
+      `/group/${payload.groupId}/card`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          question: payload.question,
+          answer: payload.answer,
+        }),
+      },
+      thunkAPI.getState
+    );
+    if (!res.ok) return thunkAPI.rejectWithValue(await res.text());
+
+    const { data: card } = await res.json();
+    return {
+      id: card.id,
+      question: card.question,
+      answer: card.answer,
+    };
+  } catch (e) {
+    return thunkAPI.rejectWithValue(
+      e instanceof Error ? e.message : 'Network error'
+    );
+  }
+});
+
 const groupSlice = createSlice({
   name: 'groups',
   initialState,
@@ -128,6 +161,33 @@ const groupSlice = createSlice({
       .addCase(getAllGroups.rejected, (state, action) => {
         state.loading = false;
         state.error = (action.payload as string) ?? 'Failed to fetch groups';
+      })
+      .addCase(addCardToGroup.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addCardToGroup.fulfilled, (state, action) => {
+        state.loading = false;
+        // Find the group and add the card to it
+        const findAndUpdateGroup = (groups: GroupType[], groupId: string): boolean => {
+          for (const group of groups) {
+            if (group.id === groupId) {
+              group.cards.push(action.payload);
+              return true;
+            }
+            if (group.groups && findAndUpdateGroup(group.groups, groupId)) {
+              return true;
+            }
+          }
+          return false;
+        };
+        // Get groupId from the original action arguments
+        const groupId = action.meta.arg.groupId;
+        findAndUpdateGroup(state.groupsList, groupId);
+      })
+      .addCase(addCardToGroup.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

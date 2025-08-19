@@ -39,4 +39,29 @@ export class GroupService {
     const groups = await this.databaseService.group.findMany();
     return groups;
   }
+
+  async verifyGroupOwnership(
+    groupId: string,
+    userId: number,
+  ): Promise<{ success: boolean; message?: string }> {
+    try {
+      const group = await this.databaseService.group.findUnique({
+        where: { id: groupId },
+        select: { userId: true },
+      });
+
+      if (!group) {
+        return { success: false, message: 'Group not found' };
+      }
+
+      if (group.userId !== userId) {
+        return { success: false, message: 'Access denied: You do not own this group' };
+      }
+
+      return { success: true };
+    } catch (err: unknown) {
+      this.logger.error('Group ownership verification error', err);
+      return { success: false, message: 'Failed to verify group ownership' };
+    }
+  }
 }
