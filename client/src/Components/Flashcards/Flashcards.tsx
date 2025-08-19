@@ -59,11 +59,11 @@ const Flashcards = () => {
           <TableHead>
             <TableRow>
               <TableCell sx={{ width: 48 }} />
-              <TableCell>Name</TableCell>
-              <TableCell align='right'>Total Cards</TableCell>
-              <TableCell>Created At</TableCell>
-              <TableCell>Updated At</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell align='left'>Name</TableCell>
+              <TableCell align='center'>Total Cards</TableCell>
+              <TableCell align='left'>Created At</TableCell>
+              <TableCell align='left'>Updated At</TableCell>
+              <TableCell align='center'>Actions</TableCell>
             </TableRow>
           </TableHead>
 

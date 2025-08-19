@@ -1,6 +1,19 @@
 // GroupTable.tsx
-import { IconButton, TableCell, TableRow } from '@mui/material';
-import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
+import {
+  IconButton,
+  TableCell,
+  TableRow,
+  Tooltip,
+  Box,
+  TextField,
+} from '@mui/material';
+import {
+  KeyboardArrowDown,
+  KeyboardArrowRight,
+  Edit,
+  Delete,
+  Add,
+} from '@mui/icons-material';
 import type { GroupType } from '../../../store/slices/groupSlice';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -24,8 +37,9 @@ const GroupTable: React.FC<GroupTableProps> = ({
   expanded,
 }) => {
   const { id, name, updatedAt, createdAt, groups } = group;
+  const [isEditName, setIsEditName] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-
+  const [editedName, setEditedName] = useState(name);
   const totalCards = group.cards?.length;
   const hasChildren = !!(groups && groups.length > 0);
   const [openModal, setOpenModal] = useState(false);
@@ -45,16 +59,37 @@ const GroupTable: React.FC<GroupTableProps> = ({
   const handleCreate = async () => {
     if (newCard.question.trim() && newCard.answer.trim()) {
       try {
-        await dispatch(addCardToGroup({
-          groupId: id,
-          question: newCard.question.trim(),
-          answer: newCard.answer.trim(),
-        })).unwrap();
+        await dispatch(
+          addCardToGroup({
+            groupId: id,
+            question: newCard.question.trim(),
+            answer: newCard.answer.trim(),
+          })
+        ).unwrap();
         handleCloseModal();
       } catch (error) {
         console.error('Failed to add card:', error);
         // You might want to show a toast notification here
       }
+    }
+  };
+
+  const handleEditGroup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditName(true);
+  };
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setEditedName(value);
+  };
+  const handleDeleteGroup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // TODO: Implement delete group functionality
+    console.log('Delete group:', id);
+  };
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      setIsEditName(false);
     }
   };
 
@@ -94,28 +129,71 @@ const GroupTable: React.FC<GroupTableProps> = ({
           )}
         </TableCell>
         <TableCell
+          align='left'
           sx={{
             minWidth: 400,
             paddingLeft: level > 0 ? `${level * 32}px` : 0,
             cursor: 'pointer',
           }}
-          onClick={handleOpenModal}
         >
-          {name}
+          {isEditName ? (
+            <TextField
+              value={editedName}
+              onChange={handleNameChange}
+              onKeyDown={handleKeyDown}
+            />
+          ) : (
+            name
+          )}
         </TableCell>
 
-        <TableCell align='right'>{totalCards}</TableCell>
-        <TableCell>
+        <TableCell align='center'>{totalCards}</TableCell>
+        <TableCell align='left'>
           {createdAt ? new Date(createdAt).toLocaleDateString() : '—'}
         </TableCell>
-        <TableCell>
+        <TableCell align='left'>
           {updatedAt ? new Date(updatedAt).toLocaleDateString() : '—'}
         </TableCell>
 
-        <TableCell align='left'>
-          <IconButton size='small' aria-label='more'>
-            ⋯
-          </IconButton>
+        <TableCell align='center'>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 0.5,
+              opacity: 0.7,
+              '&:hover': { opacity: 1 },
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <Tooltip title='Add Flashcard'>
+              <IconButton
+                size='small'
+                onClick={handleOpenModal}
+                sx={{ color: 'primary.main' }}
+              >
+                <Add fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Rename Group'>
+              <IconButton
+                size='small'
+                onClick={handleEditGroup}
+                sx={{ color: 'text.secondary' }}
+              >
+                <Edit fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Remove Group'>
+              <IconButton
+                size='small'
+                onClick={handleDeleteGroup}
+                sx={{ color: 'error.main' }}
+              >
+                <Delete fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </TableCell>
       </TableRow>
 

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateGroupDto } from './dto/create-group.dto';
-import { Group } from '@prisma/client';
+import { Group, Card } from '@prisma/client';
 
 @Injectable()
 export class GroupService {
@@ -20,6 +20,7 @@ export class GroupService {
           userId,
         },
       });
+
       return { success: true, data: group };
     } catch (err: unknown) {
       let msg = 'Failed to create group';
@@ -35,8 +36,12 @@ export class GroupService {
       return { success: false, message: msg };
     }
   }
-  async getAllGroups(): Promise<Group[]> {
-    const groups = await this.databaseService.group.findMany();
+  async getAllGroups(): Promise<(Group & { cards: Card[] })[]> {
+    const groups = await this.databaseService.group.findMany({
+      include: {
+        cards: true,
+      },
+    });
     return groups;
   }
 
@@ -55,7 +60,10 @@ export class GroupService {
       }
 
       if (group.userId !== userId) {
-        return { success: false, message: 'Access denied: You do not own this group' };
+        return {
+          success: false,
+          message: 'Access denied: You do not own this group',
+        };
       }
 
       return { success: true };
