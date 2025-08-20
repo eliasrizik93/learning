@@ -18,8 +18,9 @@ import type { GroupType } from '../../../store/slices/groupSlice';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../../store/store';
-import { addCardToGroup } from '../../../store/slices/groupSlice';
+import { addCardToGroup, updateGroup } from '../../../store/slices/groupSlice';
 import AddCardModal from './AddCardModal/AddCardModal';
+import DeleteGroupModal from './DeleteGroupModal/DeleteGroupModal';
 
 type GroupTableProps = {
   group: GroupType;
@@ -44,6 +45,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
   const hasChildren = !!(groups && groups.length > 0);
   const [openModal, setOpenModal] = useState(false);
   const [newCard, setNewCard] = useState({ question: '', answer: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => {
     setOpenModal(false);
@@ -84,11 +86,15 @@ const GroupTable: React.FC<GroupTableProps> = ({
   };
   const handleDeleteGroup = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // TODO: Implement delete group functionality
-    console.log('Delete group:', id);
+    setIsDeleting(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleting(false);
   };
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      dispatch(updateGroup({ id, name: editedName }));
       setIsEditName(false);
     }
   };
@@ -106,6 +112,12 @@ const GroupTable: React.FC<GroupTableProps> = ({
         onChange={handleChange}
         onClose={handleCloseModal}
         onCreate={handleCreate}
+      />
+      <DeleteGroupModal
+        open={isDeleting}
+        groupId={id}
+        groupName={name}
+        onClose={handleCloseDeleteModal}
       />
       <TableRow
         key={id}
