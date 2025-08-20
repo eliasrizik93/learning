@@ -1,4 +1,5 @@
-import { Box, Button } from '@mui/material';
+import { Box, Button, Paper, Typography } from '@mui/material';
+import { Add, Search } from '@mui/icons-material';
 import { useState } from 'react';
 import AddGroupModal from './AddGroupModal/AddGroupModal';
 import { createGroup } from '../../../store/slices/groupSlice';
@@ -20,10 +21,83 @@ const TableHeader = () => {
     setGroupName('');
     dispatch(createGroup({ name: groupName }));
   };
+  
   return (
-    <Box>
-      <Button onClick={handleOpen}>Add Group</Button>
-      <Button>Browse</Button>
+    <Paper 
+      elevation={2} 
+      sx={{ 
+        p: 3, 
+        mb: 3, 
+        borderRadius: 2,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white'
+      }}
+    >
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
+            Flashcard Manager
+          </Typography>
+          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+            Organize your study materials into groups and cards
+          </Typography>
+        </Box>
+        
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button 
+            variant="contained" 
+            startIcon={<Add />}
+            onClick={handleOpen}
+            sx={{
+              bgcolor: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              color: 'white',
+              fontWeight: 'bold',
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.3)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+              },
+              transition: 'all 0.3s ease'
+            }}
+          >
+            Add Group
+          </Button>
+          
+          <Button 
+            variant="outlined" 
+            startIcon={<Search />}
+            sx={{
+              borderColor: 'rgba(255, 255, 255, 0.5)',
+              color: 'white',
+              fontWeight: 'bold',
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              '&:hover': {
+                borderColor: 'white',
+                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+              },
+              transition: 'all 0.3s ease'
+            }}
+          >
+            Browse
+          </Button>
+        </Box>
+      </Box>
+      
       {open && (
         <AddGroupModal
           open={open}
@@ -33,7 +107,7 @@ const TableHeader = () => {
           onCreate={handleCreateGroup}
         />
       )}
-    </Box>
+    </Paper>
   );
 };
 
