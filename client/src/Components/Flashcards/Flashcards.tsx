@@ -60,11 +60,12 @@ const Flashcards = () => {
             <TableHead>
               <TableRow
                 sx={{
-                  bgcolor: '#f8f9fa',
+                  background:
+                    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   '& .MuiTableCell-head': {
                     fontWeight: 'bold',
-                    color: '#495057',
-                    borderBottom: '2px solid #e9ecef',
+                    color: 'white',
+                    borderBottom: '2px solid rgba(255,255,255,0.2)',
                   },
                 }}
               >

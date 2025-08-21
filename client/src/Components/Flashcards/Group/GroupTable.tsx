@@ -153,6 +153,49 @@ const GroupTable: React.FC<GroupTableProps> = ({
               value={editedName}
               onChange={handleNameChange}
               onKeyDown={handleKeyDown}
+              size="small"
+              variant="outlined"
+              autoFocus
+              placeholder="Enter group name..."
+              sx={{
+                width: '280px',
+                '& .MuiOutlinedInput-root': {
+                  height: '38px',
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff',
+                  fontSize: '0.875rem',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                  transition: 'all 0.2s ease-in-out',
+                  border: '1px solid #e1e5e9',
+                  '&:hover': {
+                    boxShadow: '0 4px 8px rgba(102, 126, 234, 0.15)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#667eea',
+                  },
+                  '&.Mui-focused': {
+                    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.25)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#667eea',
+                    borderWidth: '2px',
+                  },
+                  '& fieldset': {
+                    borderColor: '#e1e5e9',
+                  },
+                },
+                '& .MuiOutlinedInput-input': {
+                  padding: '9px 14px',
+                  fontWeight: 500,
+                  color: '#2c3e50',
+                  '&::placeholder': {
+                    color: '#94a3b8',
+                    opacity: 1,
+                  },
+                },
+              }}
             />
           ) : (
             name
