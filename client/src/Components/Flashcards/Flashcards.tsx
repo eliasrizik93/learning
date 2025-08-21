@@ -14,16 +14,8 @@ import {
 import TableHeader from './TableHeader/TableHeader';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../../store/store';
-import { getAllGroups, type GroupType } from '../../store/slices/groupSlice';
-
-export type Card = {
-  id: string;
-  question: string;
-  answer: string;
-  createdAt: string;
-  updatedAt: string;
-  groupId: string;
-};
+import { getAllGroups } from '../../store/slices/groupSlice';
+import type { GroupType } from '../../types';
 
 const Flashcards = () => {
   const flashCards = useSelector(
@@ -48,15 +40,15 @@ const Flashcards = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth='xl' sx={{ py: 4 }}>
       <TableHeader />
-      
-      <Paper 
-        elevation={3} 
-        sx={{ 
+
+      <Paper
+        elevation={3}
+        sx={{
           borderRadius: 3,
           overflow: 'hidden',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
+          boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
         }}
       >
         <TableContainer>
@@ -66,14 +58,16 @@ const Flashcards = () => {
             aria-label='flashcard groups table'
           >
             <TableHead>
-              <TableRow sx={{ 
-                bgcolor: '#f8f9fa',
-                '& .MuiTableCell-head': {
-                  fontWeight: 'bold',
-                  color: '#495057',
-                  borderBottom: '2px solid #e9ecef'
-                }
-              }}>
+              <TableRow
+                sx={{
+                  bgcolor: '#f8f9fa',
+                  '& .MuiTableCell-head': {
+                    fontWeight: 'bold',
+                    color: '#495057',
+                    borderBottom: '2px solid #e9ecef',
+                  },
+                }}
+              >
                 <TableCell sx={{ width: 48 }} />
                 <TableCell align='left'>Group Name</TableCell>
                 <TableCell align='center'>Total Cards</TableCell>
@@ -86,12 +80,17 @@ const Flashcards = () => {
             <TableBody>
               {flashCards?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                    <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  <TableCell colSpan={6} align='center' sx={{ py: 8 }}>
+                    <Typography
+                      variant='h6'
+                      color='text.secondary'
+                      sx={{ mb: 1 }}
+                    >
                       No flashcard groups yet
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Create your first group to get started with organizing your flashcards
+                    <Typography variant='body2' color='text.secondary'>
+                      Create your first group to get started with organizing
+                      your flashcards
                     </Typography>
                   </TableCell>
                 </TableRow>

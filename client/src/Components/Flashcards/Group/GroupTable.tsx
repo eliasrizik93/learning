@@ -144,7 +144,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
           align='left'
           sx={{
             minWidth: 400,
-            paddingLeft: level > 0 ? `${level * 32}px` : 0,
+            ...(level > 0 && { paddingLeft: `${level * 32}px` }),
             cursor: 'pointer',
           }}
         >

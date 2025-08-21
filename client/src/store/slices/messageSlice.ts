@@ -1,14 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-
-export type MessageType = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  profile: string;
-  content: string;
-  date: string;
-  isSender: boolean;
-};
+import type { MessageType } from '../../types';
 
 type MessageState = {
   messages: MessageType[];
