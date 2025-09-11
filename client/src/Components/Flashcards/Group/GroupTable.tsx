@@ -14,7 +14,7 @@ import {
   Delete,
   Add,
 } from '@mui/icons-material';
-import type { GroupType } from '../../../store/slices/groupSlice';
+import type { GroupType } from '../../../types';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../../store/store';
@@ -28,6 +28,7 @@ type GroupTableProps = {
   toggleExpand: (id: string) => void;
   level?: number;
   expanded: Set<string>;
+  onGroupClick?: (groupId: string, groupName: string) => void;
 };
 
 const GroupTable: React.FC<GroupTableProps> = ({
@@ -36,6 +37,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
   isOpen,
   level = 0,
   expanded,
+  onGroupClick,
 }) => {
   const { id, name, updatedAt, createdAt, groups } = group;
   const [isEditName, setIsEditName] = useState(false);
@@ -147,6 +149,11 @@ const GroupTable: React.FC<GroupTableProps> = ({
             ...(level > 0 && { paddingLeft: `${level * 32}px` }),
             cursor: 'pointer',
           }}
+          onClick={() => {
+            if (!isEditName && onGroupClick && totalCards && totalCards > 0) {
+              onGroupClick(id, name);
+            }
+          }}
         >
           {isEditName ? (
             <TextField
@@ -198,7 +205,18 @@ const GroupTable: React.FC<GroupTableProps> = ({
               }}
             />
           ) : (
-            name
+            <Box
+              sx={{
+                color: totalCards && totalCards > 0 ? 'primary.main' : 'inherit',
+                fontWeight: totalCards && totalCards > 0 ? 'bold' : 'normal',
+                '&:hover': totalCards && totalCards > 0 ? {
+                  textDecoration: 'underline',
+                  color: 'primary.dark'
+                } : {}
+              }}
+            >
+              {name}
+            </Box>
           )}
         </TableCell>
 
@@ -264,6 +282,7 @@ const GroupTable: React.FC<GroupTableProps> = ({
               toggleExpand={toggleExpand}
               level={level + 1}
               expanded={expanded}
+              onGroupClick={onGroupClick}
             />
           );
         })}

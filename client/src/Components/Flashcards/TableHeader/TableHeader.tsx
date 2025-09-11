@@ -5,9 +5,11 @@ import AddGroupModal from './AddGroupModal/AddGroupModal';
 import { createGroup } from '../../../store/slices/groupSlice';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../../store/store';
+import BrowseModal from '../BrowseModal/BrowseModal';
 
 const TableHeader = () => {
   const [open, setOpen] = useState(false);
+  const [browseOpen, setBrowseOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const dispatch = useDispatch() as AppDispatch;
   const onGroupNameChange = (
@@ -16,6 +18,8 @@ const TableHeader = () => {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const handleBrowseOpen = () => setBrowseOpen(true);
+  const handleBrowseClose = () => setBrowseOpen(false);
   const handleCreateGroup = () => {
     setOpen(false);
     setGroupName('');
@@ -79,6 +83,7 @@ const TableHeader = () => {
           <Button
             variant='outlined'
             startIcon={<Search />}
+            onClick={handleBrowseOpen}
             sx={{
               borderColor: 'rgba(255, 255, 255, 0.5)',
               color: 'white',
@@ -108,6 +113,10 @@ const TableHeader = () => {
           onClose={handleClose}
           onCreate={handleCreateGroup}
         />
+      )}
+
+      {browseOpen && (
+        <BrowseModal open={browseOpen} onClose={handleBrowseClose} />
       )}
     </Paper>
   );

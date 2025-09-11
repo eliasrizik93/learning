@@ -8,6 +8,10 @@ export interface Card {
   createdAt: string;
   updatedAt: string;
   groupId: string;
+  group?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface Group {

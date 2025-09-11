@@ -36,4 +36,25 @@ export class CardService {
       return { success: false, message: 'Failed to create card' };
     }
   }
+
+  async getAllCards(): Promise<{ success: boolean; data?: Card[]; message?: string }> {
+    try {
+      const cards = await this.db.card.findMany({
+        include: {
+          group: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      return { success: true, data: cards };
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.logger.error(`Get all cards error: ${msg}`);
+      return { success: false, message: 'Failed to fetch cards' };
+    }
+  }
 }
