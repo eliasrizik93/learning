@@ -1,43 +1,53 @@
-import {
-  createAsyncThunk,
-  createSlice,
-  type PayloadAction,
-} from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { RootState } from '../store';
 import { apiFetch } from '../../lib/apiFetch';
-import type { Card, Group, GroupType, GroupState } from '../../types';
+import type { Card, Group, GroupState, ContentType } from '../../types';
 
-/**
- * Raw group data from API response
- */
-type ApiGroupResponse = {
+type AddCardPayload = {
+  groupId: string;
+  questionText?: string;
+  questionType?: ContentType;
+  questionMediaUrl?: string;
+  answerText?: string;
+  answerType?: ContentType;
+  answerMediaUrl?: string;
+};
+
+interface ApiGroupResponse {
   id: string;
   name: string;
   createdAt: string;
   updatedAt: string;
   userId: string | number;
+  parentId?: string | null;
   cards?: Card[];
-  groups?: ApiGroupResponse[];
-};
+  children?: ApiGroupResponse[];
+}
 
-/**
- * Transforms raw API group data to normalized Group
- */
 const transformApiGroup = (apiGroup: ApiGroupResponse): Group => ({
   id: apiGroup.id,
   name: apiGroup.name,
   createdAt: apiGroup.createdAt,
   updatedAt: apiGroup.updatedAt,
   userId: Number(apiGroup.userId),
-  cards: Array.isArray(apiGroup.cards) ? apiGroup.cards : [],
-  groups: apiGroup.groups?.map(transformApiGroup),
+  parentId: apiGroup.parentId,
+  cards: apiGroup.cards ?? [],
+  children: apiGroup.children?.map(transformApiGroup),
 });
 
-/**
- * Handles common error transformation
- */
+const parseApiError = async (res: Response): Promise<string> => {
+  try {
+    const data = await res.json();
+    return data.message || data.error || `Error: ${res.status}`;
+  } catch {
+    return `Error: ${res.status} ${res.statusText}`;
+  }
+};
+
 const handleAsyncError = (error: unknown): string => {
-  return error instanceof Error ? error.message : 'Network error';
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'An unexpected error occurred';
 };
 
 const initialState: GroupState = {
@@ -47,20 +57,43 @@ const initialState: GroupState = {
 };
 
 /**
- * Creates a new group
+ * Creates a new group (optionally as a subgroup)
  */
 export const createGroup = createAsyncThunk<
   Group,
-  { name: string },
+  { name: string; parentId?: string },
   { state: RootState; rejectValue: string }
 >('groups/create', async (payload, thunkAPI) => {
   try {
     const res = await apiFetch(
       '/group',
-      { method: 'POST', body: JSON.stringify({ name: payload.name }) },
+      { method: 'POST', body: JSON.stringify({ name: payload.name, parentId: payload.parentId }) },
       thunkAPI.getState
     );
-    if (!res.ok) return thunkAPI.rejectWithValue(await res.text());
+    if (!res.ok) return thunkAPI.rejectWithValue(await parseApiError(res));
+
+    const { data } = await res.json();
+    return transformApiGroup(data);
+  } catch (e) {
+    return thunkAPI.rejectWithValue(handleAsyncError(e));
+  }
+});
+
+/**
+ * Moves a group to a new parent (or to root if parentId is null)
+ */
+export const moveGroup = createAsyncThunk<
+  Group,
+  { groupId: string; parentId: string | null },
+  { state: RootState; rejectValue: string }
+>('groups/move', async (payload, thunkAPI) => {
+  try {
+    const res = await apiFetch(
+      `/group/${payload.groupId}/move`,
+      { method: 'PUT', body: JSON.stringify({ parentId: payload.parentId }) },
+      thunkAPI.getState
+    );
+    if (!res.ok) return thunkAPI.rejectWithValue(await parseApiError(res));
 
     const { data } = await res.json();
     return transformApiGroup(data);
@@ -83,7 +116,7 @@ export const updateGroup = createAsyncThunk<
       { method: 'PUT', body: JSON.stringify({ name: payload.name }) },
       thunkAPI.getState
     );
-    if (!res.ok) return thunkAPI.rejectWithValue(await res.text());
+    if (!res.ok) return thunkAPI.rejectWithValue(await parseApiError(res));
 
     const { data } = await res.json();
     return transformApiGroup(data);
@@ -106,13 +139,14 @@ export const deleteGroup = createAsyncThunk<
       { method: 'DELETE' },
       thunkAPI.getState
     );
-    if (!res.ok) return thunkAPI.rejectWithValue(await res.text());
+    if (!res.ok) return thunkAPI.rejectWithValue(await parseApiError(res));
 
     return payload.id;
   } catch (e) {
     return thunkAPI.rejectWithValue(handleAsyncError(e));
   }
 });
+
 /**
  * Fetches all groups for the current user
  */
@@ -123,7 +157,7 @@ export const getAllGroups = createAsyncThunk<
 >('groups/getAll', async (_: void, thunkAPI) => {
   try {
     const res = await apiFetch('/group', { method: 'GET' }, thunkAPI.getState);
-    if (!res.ok) return thunkAPI.rejectWithValue(await res.text());
+    if (!res.ok) return thunkAPI.rejectWithValue(await parseApiError(res));
 
     const json = await res.json();
     const list = Array.isArray(json?.data) ? json.data : json;
@@ -140,7 +174,7 @@ export const getAllGroups = createAsyncThunk<
 
 export const addCardToGroup = createAsyncThunk<
   Card,
-  { groupId: string; question: string; answer: string },
+  AddCardPayload,
   { state: RootState; rejectValue: string }
 >('groups/addCard', async (payload, thunkAPI) => {
   try {
@@ -149,23 +183,20 @@ export const addCardToGroup = createAsyncThunk<
       {
         method: 'POST',
         body: JSON.stringify({
-          question: payload.question,
-          answer: payload.answer,
+          questionText: payload.questionText,
+          questionType: payload.questionType || 'TEXT',
+          questionMediaUrl: payload.questionMediaUrl,
+          answerText: payload.answerText,
+          answerType: payload.answerType || 'TEXT',
+          answerMediaUrl: payload.answerMediaUrl,
         }),
       },
       thunkAPI.getState
     );
-    if (!res.ok) return thunkAPI.rejectWithValue(await res.text());
+    if (!res.ok) return thunkAPI.rejectWithValue(await parseApiError(res));
 
     const { data: card } = await res.json();
-    return {
-      id: card.id,
-      question: card.question,
-      answer: card.answer,
-      createdAt: card.createdAt || new Date().toISOString(),
-      updatedAt: card.updatedAt || new Date().toISOString(),
-      groupId: payload.groupId,
-    };
+    return card;
   } catch (e) {
     return thunkAPI.rejectWithValue(handleAsyncError(e));
   }
@@ -181,13 +212,10 @@ const groupSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(
-        createGroup.fulfilled,
-        (state, action: PayloadAction<GroupType>) => {
-          state.isLoading = false;
-          state.groupsList.push(action.payload);
-        }
-      )
+      .addCase(createGroup.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.groupsList.push(action.payload);
+      })
       .addCase(createGroup.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload ?? 'Failed to create group';
@@ -196,14 +224,10 @@ const groupSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      // FIX: payload is GroupType[]
-      .addCase(
-        getAllGroups.fulfilled,
-        (state, action: PayloadAction<GroupType[]>) => {
-          state.isLoading = false;
-          state.groupsList = action.payload;
-        }
-      )
+      .addCase(getAllGroups.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.groupsList = action.payload;
+      })
       .addCase(getAllGroups.rejected, (state, action) => {
         state.isLoading = false;
         state.error = (action.payload as string) ?? 'Failed to fetch groups';
@@ -224,7 +248,7 @@ const groupSlice = createSlice({
               group.cards.push(action.payload);
               return true;
             }
-            if (group.groups && findAndUpdateGroup(group.groups, groupId)) {
+            if (group.children && findAndUpdateGroup(group.children, groupId)) {
               return true;
             }
           }

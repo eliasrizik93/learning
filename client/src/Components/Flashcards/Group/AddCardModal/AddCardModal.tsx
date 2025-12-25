@@ -8,18 +8,48 @@ import {
 } from '@mui/material';
 import { Close, Add, Quiz } from '@mui/icons-material';
 import * as React from 'react';
+import { useState } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
+
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    [{ size: ['small', false, 'large', 'huge'] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ color: [] }, { background: [] }],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ indent: '-1' }, { indent: '+1' }],
+    ['clean'],
+  ],
+};
+
+const quillFormats = [
+  'header',
+  'size',
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'color',
+  'background',
+  'list',
+  'indent',
+];
 
 const style = {
   position: 'absolute' as const,
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 500,
+  width: 700,
+  maxWidth: '95vw',
+  maxHeight: '90vh',
   bgcolor: 'background.paper',
   borderRadius: 3,
   boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
   p: 0,
-  overflow: 'hidden',
+  overflow: 'auto',
 };
 
 type AddCardModalProps = {
@@ -32,23 +62,41 @@ type AddCardModalProps = {
   ) => void;
   onClose: () => void;
   onCreate: () => void;
+  onQuestionChange?: (value: string) => void;
+  onAnswerChange?: (value: string) => void;
 };
 
 export default function AddCardModal({
   open,
   groupName,
   values,
-  onChange,
   onClose,
   onCreate,
+  onQuestionChange,
+  onAnswerChange,
 }: AddCardModalProps) {
-  const { question, answer } = values;
+  const [question, setQuestion] = useState(values.question);
+  const [answer, setAnswer] = useState(values.answer);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && e.ctrlKey && question.trim() && answer.trim()) {
-      onCreate();
+  // Sync with parent values when modal opens
+  React.useEffect(() => {
+    if (open) {
+      setQuestion(values.question);
+      setAnswer(values.answer);
     }
+  }, [open, values.question, values.answer]);
+
+  const handleQuestionChange = (value: string) => {
+    setQuestion(value);
+    onQuestionChange?.(value);
   };
+
+  const handleAnswerChange = (value: string) => {
+    setAnswer(value);
+    onAnswerChange?.(value);
+  };
+
+  const isValid = question.replace(/<[^>]*>/g, '').trim() && answer.replace(/<[^>]*>/g, '').trim();
 
   return (
     <Modal
@@ -94,8 +142,7 @@ export default function AddCardModal({
         {/* Content */}
         <Box sx={{ p: 4 }}>
           <Typography variant='body2' sx={{ mb: 3, color: 'text.secondary' }}>
-            Adding card to <strong>{groupName}</strong>. Use Ctrl+Enter to
-            quickly save.
+            Adding card to <strong>{groupName}</strong>
           </Typography>
 
           <TextField
@@ -113,56 +160,65 @@ export default function AddCardModal({
             }}
           />
 
-          <TextField
-            label='Question'
-            name='question'
-            variant='outlined'
-            value={question}
-            onChange={onChange}
-            onKeyDown={handleKeyPress}
-            autoFocus
-            fullWidth
-            multiline
-            rows={3}
-            placeholder='Enter your question here...'
+          <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 'bold' }}>
+            Question
+          </Typography>
+          <Box
             sx={{
               mb: 3,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                '&:hover fieldset': {
-                  borderColor: '#667eea',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#667eea',
-                },
+              '& .ql-editor': {
+                minHeight: 100,
+                fontSize: '1rem',
+              },
+              '& .ql-toolbar': {
+                borderRadius: '8px 8px 0 0',
+                borderColor: '#e0e0e0',
+              },
+              '& .ql-container': {
+                borderRadius: '0 0 8px 8px',
+                borderColor: '#e0e0e0',
               },
             }}
-          />
+          >
+            <ReactQuill
+              theme='snow'
+              value={question}
+              onChange={handleQuestionChange}
+              modules={quillModules}
+              formats={quillFormats}
+              placeholder='Enter your question here...'
+            />
+          </Box>
 
-          <TextField
-            label='Answer'
-            name='answer'
-            variant='outlined'
-            value={answer}
-            onChange={onChange}
-            onKeyDown={handleKeyPress}
-            fullWidth
-            multiline
-            rows={3}
-            placeholder='Enter the answer here...'
+          <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 'bold' }}>
+            Answer
+          </Typography>
+          <Box
             sx={{
               mb: 4,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                '&:hover fieldset': {
-                  borderColor: '#667eea',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#667eea',
-                },
+              '& .ql-editor': {
+                minHeight: 100,
+                fontSize: '1rem',
+              },
+              '& .ql-toolbar': {
+                borderRadius: '8px 8px 0 0',
+                borderColor: '#e0e0e0',
+              },
+              '& .ql-container': {
+                borderRadius: '0 0 8px 8px',
+                borderColor: '#e0e0e0',
               },
             }}
-          />
+          >
+            <ReactQuill
+              theme='snow'
+              value={answer}
+              onChange={handleAnswerChange}
+              modules={quillModules}
+              formats={quillFormats}
+              placeholder='Enter the answer here...'
+            />
+          </Box>
 
           {/* Actions */}
           <Box
@@ -192,7 +248,7 @@ export default function AddCardModal({
             <Button
               variant='contained'
               onClick={onCreate}
-              disabled={!question.trim() || !answer.trim()}
+              disabled={!isValid}
               startIcon={<Add />}
               sx={{
                 borderRadius: 2,

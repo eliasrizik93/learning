@@ -4,6 +4,6 @@ import type { RootState } from '../../store/store';
 
 export default function PublicOnly() {
   const isAuth = useSelector((s: RootState) => s.auth.isAuth);
-  if (isAuth) return <Navigate to='/dashboard' replace />;
+  if (isAuth) return <Navigate to='/flashcards' replace />;
   return <Outlet />;
 }

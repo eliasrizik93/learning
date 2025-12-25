@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import GroupTable from './Group/GroupTable';
 import {
+  Box,
   Paper,
   Table,
   TableBody,
@@ -10,18 +11,15 @@ import {
   TableRow,
   Typography,
   Container,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  IconButton,
 } from '@mui/material';
-import { ArrowBack, ArrowForward, Visibility, VisibilityOff } from '@mui/icons-material';
 import TableHeader from './TableHeader/TableHeader';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../../store/store';
-import { getAllGroups } from '../../store/slices/groupSlice';
-import type { GroupType, Card as CardType } from '../../types';
+import { getAllGroups, moveGroup } from '../../store/slices/groupSlice';
+import type { GroupType } from '../../types';
+import StudySession from './Study/StudySession';
+
+type StudyMode = 'review' | 'practice';
 
 const Flashcards = () => {
   const flashCards = useSelector(
@@ -29,15 +27,55 @@ const Flashcards = () => {
   );
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [selectedGroupCards, setSelectedGroupCards] = useState<CardType[]>([]);
+  const [isStudying, setIsStudying] = useState(false);
+  const [studyMode, setStudyMode] = useState<StudyMode>('review');
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [selectedGroupName, setSelectedGroupName] = useState<string>('');
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isDropZoneActive, setIsDropZoneActive] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
+
   useEffect(() => {
     dispatch(getAllGroups());
   }, [dispatch]);
+
+  // Track when dragging starts/ends anywhere
+  useEffect(() => {
+    const handleDragStart = () => setIsDragging(true);
+    const handleDragEnd = () => {
+      setIsDragging(false);
+      setIsDropZoneActive(false);
+    };
+    
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('dragend', handleDragEnd);
+    
+    return () => {
+      document.removeEventListener('dragstart', handleDragStart);
+      document.removeEventListener('dragend', handleDragEnd);
+    };
+  }, []);
+
+  const handleRootDropZoneDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDropZoneActive(true);
+  };
+
+  const handleRootDropZoneDragLeave = () => {
+    setIsDropZoneActive(false);
+  };
+
+  const handleRootDropZoneDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDropZoneActive(false);
+    const draggedGroupId = e.dataTransfer.getData('groupId') || e.dataTransfer.getData('text/plain');
+    if (draggedGroupId) {
+      await dispatch(moveGroup({ groupId: draggedGroupId, parentId: null }));
+      dispatch(getAllGroups());
+    }
+  };
+
   const toggleExpand = (id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -50,139 +88,63 @@ const Flashcards = () => {
     });
   };
 
-  const handleGroupClick = (groupId: string, groupName: string) => {
-    const group = flashCards?.find(g => g.id === groupId);
-    if (group && group.cards && group.cards.length > 0) {
-      setSelectedGroupCards(group.cards);
-      setSelectedGroupName(groupName);
-      setCurrentCardIndex(0);
-      setShowAnswer(false);
-      setViewMode('cards');
-    }
+  const handleGroupClick = (groupId: string, groupName: string, mode: StudyMode) => {
+    setSelectedGroupId(groupId);
+    setSelectedGroupName(groupName);
+    setStudyMode(mode);
+    setIsStudying(true);
   };
 
   const handleBackToTable = () => {
-    setViewMode('table');
-    setSelectedGroupCards([]);
+    setIsStudying(false);
+    setSelectedGroupId('');
     setSelectedGroupName('');
-    setCurrentCardIndex(0);
-    setShowAnswer(false);
+    dispatch(getAllGroups());
   };
 
-  const handleNextCard = () => {
-    if (currentCardIndex < selectedGroupCards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
-      setShowAnswer(false);
-    }
-  };
-
-  const handlePrevCard = () => {
-    if (currentCardIndex > 0) {
-      setCurrentCardIndex(currentCardIndex - 1);
-      setShowAnswer(false);
-    }
-  };
-
-  const toggleAnswer = () => {
-    setShowAnswer(!showAnswer);
-  };
-
-  if (viewMode === 'cards' && selectedGroupCards.length > 0) {
-    const currentCard = selectedGroupCards[currentCardIndex];
-    
+  if (isStudying && selectedGroupId) {
     return (
-      <Container maxWidth='md' sx={{ py: 4 }}>
-        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBack />}
-            onClick={handleBackToTable}
-          >
-            Back to Groups
-          </Button>
-          <Typography variant="h5" sx={{ flexGrow: 1 }}>
-            {selectedGroupName} ({currentCardIndex + 1} of {selectedGroupCards.length})
-          </Typography>
-        </Box>
-
-        <Card 
-          elevation={6}
-          sx={{ 
-            minHeight: 400,
-            display: 'flex',
-            flexDirection: 'column',
-            borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-          }}
-        >
-          <CardContent sx={{ flexGrow: 1, p: 4 }}>
-            <Typography variant="h6" sx={{ mb: 3, color: 'primary.main', fontWeight: 'bold' }}>
-              Question:
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 4, fontSize: '1.1rem', lineHeight: 1.6 }}>
-              {currentCard.question}
-            </Typography>
-
-            <Typography variant="h6" sx={{ mb: 3, color: 'secondary.main', fontWeight: 'bold' }}>
-              Answer:
-            </Typography>
-            {showAnswer ? (
-              <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.6 }}>
-                {currentCard.answer}
-              </Typography>
-            ) : (
-              <Box 
-                sx={{ 
-                  p: 3, 
-                  backgroundColor: 'grey.100', 
-                  borderRadius: 2,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  '&:hover': { backgroundColor: 'grey.200' }
-                }}
-                onClick={toggleAnswer}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  Click to reveal answer
-                </Typography>
-              </Box>
-            )}
-          </CardContent>
-
-          <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <IconButton 
-              onClick={handlePrevCard} 
-              disabled={currentCardIndex === 0}
-              size="large"
-            >
-              <ArrowBack />
-            </IconButton>
-
-            <Button
-              variant="contained"
-              startIcon={showAnswer ? <VisibilityOff /> : <Visibility />}
-              onClick={toggleAnswer}
-              sx={{ minWidth: 150 }}
-            >
-              {showAnswer ? 'Hide Answer' : 'Show Answer'}
-            </Button>
-
-            <IconButton 
-              onClick={handleNextCard} 
-              disabled={currentCardIndex === selectedGroupCards.length - 1}
-              size="large"
-            >
-              <ArrowForward />
-            </IconButton>
-          </Box>
-        </Card>
-      </Container>
+      <StudySession
+        groupId={selectedGroupId}
+        groupName={selectedGroupName}
+        onBack={handleBackToTable}
+        practiceMode={studyMode === 'practice'}
+      />
     );
   }
 
   return (
     <Container maxWidth='xl' sx={{ py: 4 }}>
       <TableHeader />
+
+      {/* Drop zone to move groups to root level - always visible when dragging */}
+      <Box
+        onDragOver={handleRootDropZoneDragOver}
+        onDragLeave={handleRootDropZoneDragLeave}
+        onDrop={handleRootDropZoneDrop}
+        sx={{
+          p: 2,
+          mb: 2,
+          borderRadius: 2,
+          border: isDropZoneActive ? '3px solid #4caf50' : '2px dashed #bbb',
+          backgroundColor: isDropZoneActive ? '#c8e6c9' : isDragging ? '#e3f2fd' : 'transparent',
+          textAlign: 'center',
+          transition: 'all 0.2s',
+          opacity: isDragging ? 1 : 0.5,
+          minHeight: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography 
+          variant="body2"
+          color={isDropZoneActive ? 'success.main' : 'text.secondary'}
+          sx={{ fontWeight: isDropZoneActive ? 600 : 400 }}
+        >
+          {isDropZoneActive ? '✓ Release to move to root level' : 'Drag a group here to move it to root level'}
+        </Typography>
+      </Box>
 
       <Paper
         elevation={3}

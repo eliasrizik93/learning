@@ -44,9 +44,9 @@ export class GroupController {
   }
 
   @Get()
-  @UseGuards()
-  async getAllGroups() {
-    return this.groupsService.getAllGroups();
+  @UseGuards(JwtAuthGuard)
+  async getAllGroups(@GetUser() user: { id: number }) {
+    return this.groupsService.getAllGroups(user.id);
   }
 
   @Put(':id')
@@ -74,11 +74,32 @@ export class GroupController {
     return this.groupsService.deleteGroup(id);
   }
 
+  @Put(':id/move')
+  @UseGuards(JwtAuthGuard)
+  async moveGroup(
+    @Param('id') id: string,
+    @Body() body: { parentId: string | null },
+    @GetUser() user: { id: number },
+  ) {
+    const ownershipError = await this.checkGroupOwnership(id, user.id);
+    if (ownershipError) {
+      return ownershipError;
+    }
+    // If moving to a parent, verify ownership of parent too
+    if (body.parentId) {
+      const parentOwnershipError = await this.checkGroupOwnership(body.parentId, user.id);
+      if (parentOwnershipError) {
+        return parentOwnershipError;
+      }
+    }
+    return this.groupsService.moveGroup(id, body.parentId);
+  }
+
   @Post(':id/card')
   @UseGuards(JwtAuthGuard)
   async addCardToGroup(
     @Param('id') groupId: string,
-    @Body() body: { question: string; answer: string },
+    @Body() body: CreateCardDto,
     @GetUser() user: { id: number },
   ) {
     const ownershipError = await this.checkGroupOwnership(groupId, user.id);
@@ -87,10 +108,61 @@ export class GroupController {
     }
 
     const createCardDto: CreateCardDto = {
-      question: body.question,
-      answer: body.answer,
+      ...body,
       groupId: groupId,
     };
     return this.cardService.createCard(createCardDto);
+  }
+
+  @Get(':id/stats')
+  @UseGuards(JwtAuthGuard)
+  async getGroupStats(
+    @Param('id') groupId: string,
+    @GetUser() user: { id: number },
+  ) {
+    const ownershipError = await this.checkGroupOwnership(groupId, user.id);
+    if (ownershipError) {
+      return ownershipError;
+    }
+    return this.cardService.getGroupStats(groupId);
+  }
+
+  @Get(':id/due')
+  @UseGuards(JwtAuthGuard)
+  async getGroupDueCards(
+    @Param('id') groupId: string,
+    @GetUser() user: { id: number },
+  ) {
+    const ownershipError = await this.checkGroupOwnership(groupId, user.id);
+    if (ownershipError) {
+      return ownershipError;
+    }
+    return this.cardService.getCardsDueForReview(groupId);
+  }
+
+  @Post(':id/reset')
+  @UseGuards(JwtAuthGuard)
+  async resetGroupProgress(
+    @Param('id') groupId: string,
+    @GetUser() user: { id: number },
+  ) {
+    const ownershipError = await this.checkGroupOwnership(groupId, user.id);
+    if (ownershipError) {
+      return ownershipError;
+    }
+    return this.cardService.resetGroupProgress(groupId);
+  }
+
+  @Get(':id/cards')
+  @UseGuards(JwtAuthGuard)
+  async getGroupAllCards(
+    @Param('id') groupId: string,
+    @GetUser() user: { id: number },
+  ) {
+    const ownershipError = await this.checkGroupOwnership(groupId, user.id);
+    if (ownershipError) {
+      return ownershipError;
+    }
+    return this.cardService.getGroupAllCards(groupId);
   }
 }

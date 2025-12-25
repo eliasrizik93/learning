@@ -6,6 +6,7 @@ import {
   Tooltip,
   Box,
   TextField,
+  Chip,
 } from '@mui/material';
 import {
   KeyboardArrowDown,
@@ -13,14 +14,21 @@ import {
   Edit,
   Delete,
   Add,
+  Refresh,
+  PlayArrow,
+  CreateNewFolder,
+  DriveFileMove,
 } from '@mui/icons-material';
 import type { GroupType } from '../../../types';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../../store/store';
-import { addCardToGroup, updateGroup } from '../../../store/slices/groupSlice';
+import { addCardToGroup, updateGroup, getAllGroups, createGroup, moveGroup } from '../../../store/slices/groupSlice';
+import { resetGroupProgress } from '../../../store/slices/cardSlice';
 import AddCardModal from './AddCardModal/AddCardModal';
 import DeleteGroupModal from './DeleteGroupModal/DeleteGroupModal';
+
+type StudyMode = 'review' | 'practice';
 
 type GroupTableProps = {
   group: GroupType;
@@ -28,7 +36,7 @@ type GroupTableProps = {
   toggleExpand: (id: string) => void;
   level?: number;
   expanded: Set<string>;
-  onGroupClick?: (groupId: string, groupName: string) => void;
+  onGroupClick?: (groupId: string, groupName: string, mode: StudyMode) => void;
 };
 
 const GroupTable: React.FC<GroupTableProps> = ({
@@ -39,12 +47,57 @@ const GroupTable: React.FC<GroupTableProps> = ({
   expanded,
   onGroupClick,
 }) => {
-  const { id, name, updatedAt, createdAt, groups } = group;
+  const { id, name, updatedAt, createdAt, children: groups } = group;
   const [isEditName, setIsEditName] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const [editedName, setEditedName] = useState(name);
-  const totalCards = group.cards?.length;
+  const totalCards = group.cards?.length ?? 0;
   const hasChildren = !!(groups && groups.length > 0);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent) => {
+    e.stopPropagation();
+    e.dataTransfer.setData('text/plain', id); // Use text/plain for better compatibility
+    e.dataTransfer.setData('groupId', id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    // Try both data types for compatibility
+    const draggedGroupId = e.dataTransfer.getData('groupId') || e.dataTransfer.getData('text/plain');
+    
+    // Don't drop on itself
+    if (draggedGroupId === id || !draggedGroupId) return;
+    
+    await dispatch(moveGroup({ groupId: draggedGroupId, parentId: id }));
+    dispatch(getAllGroups());
+  };
+
+  // Calculate card statistics
+  const cardStats = useMemo(() => {
+    const cards = group.cards ?? [];
+    const now = new Date();
+    const dueCards = cards.filter((c) => new Date(c.nextReviewAt) <= now).length;
+    const newCards = cards.filter((c) => c.repetitions === 0).length;
+    const learningCards = cards.filter((c) => c.repetitions > 0 && c.interval < 21).length;
+    return { dueCards, newCards, learningCards };
+  }, [group.cards]);
   const [openModal, setOpenModal] = useState(false);
   const [newCard, setNewCard] = useState({ question: '', answer: '' });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -61,21 +114,32 @@ const GroupTable: React.FC<GroupTableProps> = ({
   };
 
   const handleCreate = async () => {
-    if (newCard.question.trim() && newCard.answer.trim()) {
+    // Strip HTML tags to check if there's actual content
+    const questionContent = newCard.question.replace(/<[^>]*>/g, '').trim();
+    const answerContent = newCard.answer.replace(/<[^>]*>/g, '').trim();
+    
+    if (questionContent && answerContent) {
       try {
         await dispatch(
           addCardToGroup({
             groupId: id,
-            question: newCard.question.trim(),
-            answer: newCard.answer.trim(),
+            questionText: newCard.question,
+            answerText: newCard.answer,
           })
         ).unwrap();
         handleCloseModal();
       } catch (error) {
         console.error('Failed to add card:', error);
-        // You might want to show a toast notification here
       }
     }
+  };
+
+  const handleQuestionChange = (value: string) => {
+    setNewCard((prev) => ({ ...prev, question: value }));
+  };
+
+  const handleAnswerChange = (value: string) => {
+    setNewCard((prev) => ({ ...prev, answer: value }));
   };
 
   const handleEditGroup = (e: React.MouseEvent) => {
@@ -114,6 +178,8 @@ const GroupTable: React.FC<GroupTableProps> = ({
         onChange={handleChange}
         onClose={handleCloseModal}
         onCreate={handleCreate}
+        onQuestionChange={handleQuestionChange}
+        onAnswerChange={handleAnswerChange}
       />
       <DeleteGroupModal
         open={isDeleting}
@@ -124,9 +190,17 @@ const GroupTable: React.FC<GroupTableProps> = ({
       <TableRow
         key={id}
         hover
+        draggable
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         sx={{
-          backgroundColor: getBackgroundColor(level),
-          '&:hover': { backgroundColor: '#d3d3d3' },
+          backgroundColor: isDragOver ? '#c8e6c9' : getBackgroundColor(level),
+          '&:hover': { backgroundColor: isDragOver ? '#c8e6c9' : '#d3d3d3' },
+          cursor: 'grab',
+          transition: 'background-color 0.2s',
+          border: isDragOver ? '2px dashed #4caf50' : 'none',
         }}
       >
         <TableCell>
@@ -150,8 +224,8 @@ const GroupTable: React.FC<GroupTableProps> = ({
             cursor: 'pointer',
           }}
           onClick={() => {
-            if (!isEditName && onGroupClick && totalCards && totalCards > 0) {
-              onGroupClick(id, name);
+            if (!isEditName && onGroupClick && totalCards > 0) {
+              onGroupClick(id, name, 'review');
             }
           }}
         >
@@ -220,7 +294,40 @@ const GroupTable: React.FC<GroupTableProps> = ({
           )}
         </TableCell>
 
-        <TableCell align='center'>{totalCards}</TableCell>
+        <TableCell align='center'>
+          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Chip
+              label={`${totalCards} total`}
+              size='small'
+              variant='outlined'
+              sx={{ fontSize: '0.7rem' }}
+            />
+            {cardStats.dueCards > 0 && (
+              <Chip
+                label={`${cardStats.dueCards} due`}
+                size='small'
+                color='error'
+                sx={{ fontSize: '0.7rem' }}
+              />
+            )}
+            {cardStats.newCards > 0 && (
+              <Chip
+                label={`${cardStats.newCards} new`}
+                size='small'
+                color='info'
+                sx={{ fontSize: '0.7rem' }}
+              />
+            )}
+            {cardStats.learningCards > 0 && (
+              <Chip
+                label={`${cardStats.learningCards} learning`}
+                size='small'
+                color='warning'
+                sx={{ fontSize: '0.7rem' }}
+              />
+            )}
+          </Box>
+        </TableCell>
         <TableCell align='left'>
           {createdAt ? new Date(createdAt).toLocaleDateString() : '—'}
         </TableCell>
@@ -248,6 +355,22 @@ const GroupTable: React.FC<GroupTableProps> = ({
                 <Add fontSize='small' />
               </IconButton>
             </Tooltip>
+            <Tooltip title='Add Subgroup'>
+              <IconButton
+                size='small'
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const subgroupName = window.prompt(`Enter name for new subgroup under "${name}":`);
+                  if (subgroupName && subgroupName.trim()) {
+                    await dispatch(createGroup({ name: subgroupName.trim(), parentId: id }));
+                    dispatch(getAllGroups());
+                  }
+                }}
+                sx={{ color: 'info.main' }}
+              >
+                <CreateNewFolder fontSize='small' />
+              </IconButton>
+            </Tooltip>
             <Tooltip title='Rename Group'>
               <IconButton
                 size='small'
@@ -266,6 +389,54 @@ const GroupTable: React.FC<GroupTableProps> = ({
                 <Delete fontSize='small' />
               </IconButton>
             </Tooltip>
+            <Tooltip title='Reset Progress'>
+              <IconButton
+                size='small'
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (window.confirm(`Reset all progress for "${name}"? This will make all cards due for review again.`)) {
+                    await dispatch(resetGroupProgress({ groupId: id }));
+                    dispatch(getAllGroups());
+                  }
+                }}
+                sx={{ color: 'warning.main' }}
+              >
+                <Refresh fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            {level > 0 && (
+              <Tooltip title='Move to Root Level'>
+                <IconButton
+                  size='small'
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Move "${name}" to root level?`)) {
+                      await dispatch(moveGroup({ groupId: id, parentId: null }));
+                      dispatch(getAllGroups());
+                    }
+                  }}
+                  sx={{ color: 'secondary.main' }}
+                >
+                  <DriveFileMove fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
+            {totalCards > 0 && (
+              <Tooltip title='Practice All (no progress tracking)'>
+                <IconButton
+                  size='small'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onGroupClick) {
+                      onGroupClick(id, name, 'practice');
+                    }
+                  }}
+                  sx={{ color: 'success.main' }}
+                >
+                  <PlayArrow fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </TableCell>
       </TableRow>

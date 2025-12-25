@@ -8,9 +8,13 @@ import {
   IconButton,
   InputAdornment,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { signupUser } from '../../store/slices/authSlice';
 import type { AppDispatch, RootState } from '../../store/store';
@@ -40,9 +44,38 @@ const SignUp = () => {
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
+  const firstNameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    firstNameRef.current?.focus();
+  }, []);
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+
+    // Clear error when field becomes valid
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      switch (name) {
+        case 'firstName':
+          if (value.trim()) delete newErrors.firstName;
+          break;
+        case 'lastName':
+          if (value.trim()) delete newErrors.lastName;
+          break;
+        case 'email':
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) delete newErrors.email;
+          break;
+        case 'password':
+          if (value.length >= 8) delete newErrors.password;
+          break;
+        case 'confirmPassword':
+          if (value === form.password) delete newErrors.confirmPassword;
+          break;
+      }
+      return newErrors;
+    });
   };
 
   const validate = () => {
@@ -107,6 +140,7 @@ const SignUp = () => {
             margin='normal'
             required
             sx={hideAsteriskSx}
+            inputRef={firstNameRef}
           />
 
           <TextField
@@ -197,17 +231,26 @@ const SignUp = () => {
             }}
           />
 
-          <TextField
-            fullWidth
-            label='Birthday'
-            name='birthday'
-            type='date'
-            InputLabelProps={{ shrink: true }}
-            value={form.birthday}
-            onChange={handleChange}
-            margin='normal'
-            sx={hideAsteriskSx}
-          />
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DatePicker
+              label='Birthday'
+              value={form.birthday ? dayjs(form.birthday) : null}
+              onChange={(date: Dayjs | null) => {
+                setForm((f) => ({
+                  ...f,
+                  birthday: date ? date.format('YYYY-MM-DD') : '',
+                }));
+              }}
+              maxDate={dayjs()}
+              minDate={dayjs('1900-01-01')}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  margin: 'normal',
+                },
+              }}
+            />
+          </LocalizationProvider>
 
           <TextField
             fullWidth

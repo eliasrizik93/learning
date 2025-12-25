@@ -1,10 +1,14 @@
 // Centralized type definitions for the application
 
+// Content types for cards
+export type ContentType = 'TEXT' | 'AUDIO' | 'VIDEO' | 'IMAGE';
+
+// Review response types
+export type ReviewResponse = 'AGAIN' | 'HARD' | 'EASY';
+
 // Core entity types
 export interface Card {
-  id: string;
-  question: string;
-  answer: string;
+  id: number;
   createdAt: string;
   updatedAt: string;
   groupId: string;
@@ -12,6 +16,19 @@ export interface Card {
     id: string;
     name: string;
   };
+  // Question side
+  questionText?: string;
+  questionType: ContentType;
+  questionMediaUrl?: string;
+  // Answer side
+  answerText?: string;
+  answerType: ContentType;
+  answerMediaUrl?: string;
+  // Spaced repetition fields
+  nextReviewAt: string;
+  interval: number;
+  easeFactor: number;
+  repetitions: number;
 }
 
 export interface Group {
@@ -21,7 +38,8 @@ export interface Group {
   updatedAt: string;
   userId: number;
   cards: Card[];
-  groups?: Group[];
+  parentId?: string | null;
+  children?: Group[];
 }
 
 // Legacy aliases for backward compatibility
@@ -54,8 +72,41 @@ export interface ApiError {
 
 // Form-related types
 export interface CardFormData {
-  question: string;
-  answer: string;
+  questionText?: string;
+  questionType?: ContentType;
+  questionMediaUrl?: string;
+  answerText?: string;
+  answerType?: ContentType;
+  answerMediaUrl?: string;
+}
+
+// Card statistics
+export interface CardStats {
+  cardId: number;
+  totalReviews: number;
+  easyCount: number;
+  hardCount: number;
+  againCount: number;
+  currentInterval: number;
+  easeFactor: number;
+  repetitions: number;
+  nextReviewAt: string;
+}
+
+// Group statistics
+export interface GroupStats {
+  groupId: string;
+  totalCards: number;
+  dueCards: number;
+  newCards: number;
+  learningCards: number;
+  matureCards: number;
+}
+
+// Review request
+export interface ReviewCardRequest {
+  cardId: number;
+  response: ReviewResponse;
 }
 
 export interface GroupFormData {

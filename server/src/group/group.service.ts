@@ -3,6 +3,11 @@ import { DatabaseService } from '../database/database.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { Group, Card } from '@prisma/client';
 
+type GroupWithCardsAndChildren = Group & { 
+  cards: Card[]; 
+  children?: GroupWithCardsAndChildren[];
+};
+
 @Injectable()
 export class GroupService {
   private readonly logger = new Logger(GroupService.name);
@@ -18,6 +23,7 @@ export class GroupService {
         data: {
           name: createGroupDto.name,
           userId,
+          parentId: createGroupDto.parentId || null,
         },
       });
 
@@ -36,11 +42,33 @@ export class GroupService {
       return { success: false, message: msg };
     }
   }
-  async getAllGroups(): Promise<(Group & { cards: Card[] })[]> {
+
+  async getAllGroups(userId: number): Promise<GroupWithCardsAndChildren[]> {
+    // Get all groups for user with cards and children recursively
     const groups = await this.databaseService.group.findMany({
+      where: { 
+        userId,
+        parentId: null, // Only top-level groups
+      },
       include: {
         cards: true,
+        children: {
+          include: {
+            cards: true,
+            children: {
+              include: {
+                cards: true,
+                children: {
+                  include: {
+                    cards: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
+      orderBy: { createdAt: 'asc' },
     });
     return groups;
   }
@@ -85,6 +113,41 @@ export class GroupService {
           'Delete group error (non-Error value)',
           JSON.stringify(err),
         );
+      }
+      return { success: false, message: msg };
+    }
+  }
+
+  async moveGroup(
+    groupId: string,
+    newParentId: string | null,
+  ): Promise<{ success: boolean; data?: Group; message?: string }> {
+    try {
+      // Prevent moving a group into itself or its descendants
+      if (newParentId) {
+        let currentParent = newParentId;
+        while (currentParent) {
+          if (currentParent === groupId) {
+            return { success: false, message: 'Cannot move a group into itself or its descendants' };
+          }
+          const parent = await this.databaseService.group.findUnique({
+            where: { id: currentParent },
+            select: { parentId: true },
+          });
+          currentParent = parent?.parentId || '';
+        }
+      }
+
+      const group = await this.databaseService.group.update({
+        where: { id: groupId },
+        data: { parentId: newParentId },
+      });
+      return { success: true, data: group };
+    } catch (err: unknown) {
+      let msg = 'Failed to move group';
+      if (err instanceof Error) {
+        msg = err.message;
+        this.logger.error(`Move group error: ${err.message}`, err.stack);
       }
       return { success: false, message: msg };
     }

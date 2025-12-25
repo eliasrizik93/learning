@@ -19,6 +19,8 @@ import {
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../../store/store';
 import type { Card } from '../../../types';
 
 interface BrowseModalProps {
@@ -28,21 +30,31 @@ interface BrowseModalProps {
 
 const BrowseModal = ({ open, onClose }: BrowseModalProps) => {
   const navigate = useNavigate();
+  const token = useSelector((state: RootState) => state.auth.token) || localStorage.getItem('token');
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCards();
-  }, []);
+    if (open) {
+      fetchCards();
+    }
+  }, [open]);
 
   const fetchCards = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3000/card');
+      setError(null);
+      const response = await fetch('http://localhost:3000/card', {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch cards');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to fetch cards (${response.status})`);
       }
 
       const result = await response.json();
@@ -53,6 +65,7 @@ const BrowseModal = ({ open, onClose }: BrowseModalProps) => {
         throw new Error(result.message || 'Failed to fetch cards');
       }
     } catch (err) {
+      console.error('Browse cards error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -250,9 +263,9 @@ const BrowseModal = ({ open, onClose }: BrowseModalProps) => {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                       }}
-                      title={card.question}
+                      title={card.questionText || ''}
                     >
-                      {card.question}
+                      {card.questionText || '-'}
                     </Typography>
                   </TableCell>
                   <TableCell sx={{ maxWidth: 300 }}>
@@ -263,9 +276,9 @@ const BrowseModal = ({ open, onClose }: BrowseModalProps) => {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                       }}
-                      title={card.answer}
+                      title={card.answerText || ''}
                     >
-                      {card.answer}
+                      {card.answerText || '-'}
                     </Typography>
                   </TableCell>
                 </TableRow>

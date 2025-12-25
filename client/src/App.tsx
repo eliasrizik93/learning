@@ -5,7 +5,6 @@ import SignIn from './Components/SignIn/SignIn';
 import SignUp from './Components/SignUp/SignUp';
 import Layout from './Components/Layout/Layout';
 import RequireAuth from './Components/RequireAuth/RequireAuth';
-import Dashboard from './Components/Dashboard/Dashboard';
 import PublicOnly from './Components/PublicOnly/PublicOnly';
 import Home from './Components/Home/Home';
 import Flashcards from './Components/Flashcards/Flashcards';
@@ -20,7 +19,6 @@ function App() {
           <Route path='signin' element={<SignIn />} />
         </Route>
         <Route element={<RequireAuth />}>
-          <Route path='dashboard' element={<Dashboard />} />
           <Route path='flashcards' element={<Flashcards />} />
         </Route>
       </Route>

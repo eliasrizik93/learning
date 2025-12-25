@@ -28,20 +28,66 @@ model Group {
   cards     Card[]
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
-  @@unique([userId, name])
-  @@index([name]) 
+  
+  // Nested groups support
+  parentId  String?
+  parent    Group?   @relation("GroupHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Group[]  @relation("GroupHierarchy")
+  
+  @@unique([userId, name, parentId])
+  @@index([name])
+  @@index([parentId])
 }
+enum ContentType {
+  TEXT
+  AUDIO
+  VIDEO
+  IMAGE
+}
+
+enum ReviewResponse {
+  AGAIN
+  HARD
+  EASY
+}
+
 model Card {
-  id        Int      @id @default(autoincrement())
-  question  String
-  answer    String
-  date      DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  groupId   String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  id          Int         @id @default(autoincrement())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  groupId     String
+  group       Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  
+  // Question side
+  questionText     String?
+  questionType     ContentType @default(TEXT)
+  questionMediaUrl String?
+  
+  // Answer side
+  answerText       String?
+  answerType       ContentType @default(TEXT)
+  answerMediaUrl   String?
+  
+  // Spaced repetition fields
+  nextReviewAt     DateTime    @default(now())
+  interval         Int         @default(0)      // days until next review
+  easeFactor       Float       @default(2.5)    // multiplier for interval
+  repetitions      Int         @default(0)      // number of successful reviews
+  
+  reviews          CardReview[]
 
   @@index([groupId])
+  @@index([nextReviewAt])
+}
+
+model CardReview {
+  id         Int            @id @default(autoincrement())
+  cardId     Int
+  card       Card           @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  response   ReviewResponse
+  reviewedAt DateTime       @default(now())
+  
+  @@index([cardId])
 }
 
 
