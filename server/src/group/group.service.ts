@@ -101,7 +101,7 @@ export class GroupService {
     groupId: string,
   ): Promise<{ success: boolean; message?: string }> {
     try {
-      this.databaseService.group.delete({ where: { id: groupId } });
+      await this.databaseService.group.delete({ where: { id: groupId } });
       return { success: true };
     } catch (err: unknown) {
       let msg = 'Failed to delete group';
