@@ -14,12 +14,15 @@ import {
   Typography,
   Tabs,
   Tab,
+  CircularProgress,
 } from '@mui/material';
+import { CloudUpload } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../../store/store';
 import { createCard, updateCard } from '../../../store/slices/cardSlice';
 import { getAllGroups } from '../../../store/slices/groupSlice';
 import type { Card, ContentType } from '../../../types';
+import { uploadFile } from '../../../lib/uploadFile';
 
 interface CardModalProps {
   open: boolean;
@@ -62,6 +65,10 @@ const CardModal = ({ open, onClose, groupId, card }: CardModalProps) => {
   const [answerType, setAnswerType] = useState<ContentType>('TEXT');
   const [answerMediaUrl, setAnswerMediaUrl] = useState('');
 
+  // Upload state
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   useEffect(() => {
     if (card) {
       setQuestionText(card.questionText || '');
@@ -83,6 +90,24 @@ const CardModal = ({ open, onClose, groupId, card }: CardModalProps) => {
     setAnswerType('TEXT');
     setAnswerMediaUrl('');
     setActiveTab(0);
+    setUploadError(null);
+  };
+
+  const handleFileUpload = async (
+    file: File,
+    setMediaUrl: (url: string) => void
+  ) => {
+    setIsUploading(true);
+    setUploadError(null);
+    try {
+      const url = await uploadFile(file);
+      setMediaUrl(url);
+    } catch (error) {
+      setUploadError('Failed to upload file. Please try again.');
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -164,14 +189,45 @@ const CardModal = ({ open, onClose, groupId, card }: CardModalProps) => {
       />
 
       {type !== 'TEXT' && (
-        <TextField
-          fullWidth
-          label={`${type} URL`}
-          value={mediaUrl}
-          onChange={(e) => setMediaUrl(e.target.value)}
-          placeholder={`Enter ${type.toLowerCase()} URL...`}
-          helperText={`Provide a URL to the ${type.toLowerCase()} file`}
-        />
+        <Box>
+          <Button
+            variant="outlined"
+            component="label"
+            startIcon={isUploading ? <CircularProgress size={20} /> : <CloudUpload />}
+            disabled={isUploading}
+            fullWidth
+            sx={{ mb: 2 }}
+          >
+            {isUploading ? 'Uploading...' : `Upload ${type}`}
+            <input
+              type="file"
+              hidden
+              accept={type === 'IMAGE' ? 'image/*' : type === 'AUDIO' ? 'audio/*' : 'video/*'}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleFileUpload(file, setMediaUrl);
+                }
+              }}
+            />
+          </Button>
+
+          <TextField
+            fullWidth
+            label={`${type} URL`}
+            value={mediaUrl}
+            onChange={(e) => setMediaUrl(e.target.value)}
+            placeholder={`Or enter ${type.toLowerCase()} URL manually...`}
+            helperText={mediaUrl ? `Current: ${mediaUrl}` : `Upload a file or provide a URL`}
+            disabled={isUploading}
+          />
+
+          {uploadError && (
+            <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
+              {uploadError}
+            </Typography>
+          )}
+        </Box>
       )}
 
       {type === 'IMAGE' && mediaUrl && (
@@ -251,7 +307,7 @@ const CardModal = ({ open, onClose, groupId, card }: CardModalProps) => {
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={isSubmitting || (!questionText && !questionMediaUrl)}
+          disabled={isSubmitting || isUploading || (!questionText && !questionMediaUrl)}
         >
           {isSubmitting ? 'Saving...' : card ? 'Update' : 'Create'}
         </Button>

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 import type { AppDispatch, RootState } from '../../store/store';
 import { logout as logoutAction } from '../../store/slices/authSlice';
-import { School, LogoutRounded } from '@mui/icons-material';
+import { School, LogoutRounded, Devices } from '@mui/icons-material';
 
 const Navbar = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -52,20 +52,36 @@ const Navbar = () => {
           </Box>
 
           {isAuth && (
-            <Button
-              component={NavLink}
-              to='/flashcards'
-              sx={{
-                color: 'white',
-                fontWeight: 500,
-                textTransform: 'none',
-                ml: 2,
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' },
-                '&.active': { backgroundColor: 'rgba(255,255,255,0.2)' },
-              }}
-            >
-              Flashcards
-            </Button>
+            <>
+              <Button
+                component={NavLink}
+                to='/flashcards'
+                sx={{
+                  color: 'white',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  ml: 2,
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' },
+                  '&.active': { backgroundColor: 'rgba(255,255,255,0.2)' },
+                }}
+              >
+                Flashcards
+              </Button>
+              <Button
+                component={NavLink}
+                to='/devices'
+                startIcon={<Devices />}
+                sx={{
+                  color: 'white',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' },
+                  '&.active': { backgroundColor: 'rgba(255,255,255,0.2)' },
+                }}
+              >
+                Devices
+              </Button>
+            </>
           )}
         </Box>
 

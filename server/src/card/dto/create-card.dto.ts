@@ -8,8 +8,9 @@ export enum ContentType {
 }
 
 export class CreateCardDto {
+  @IsOptional()
   @IsString()
-  groupId: string;
+  groupId?: string;
 
   // Question
   @IsOptional()

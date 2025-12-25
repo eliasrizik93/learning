@@ -8,8 +8,14 @@ import RequireAuth from './Components/RequireAuth/RequireAuth';
 import PublicOnly from './Components/PublicOnly/PublicOnly';
 import Home from './Components/Home/Home';
 import Flashcards from './Components/Flashcards/Flashcards';
+import DeviceAuth from './Components/DeviceAuth/DeviceAuth';
+import DeviceManagement from './Components/DeviceManagement/DeviceManagement';
+import { useSocket } from './hooks/useSocket';
 
 function App() {
+  // Connect to WebSocket for real-time updates
+  useSocket();
+
   return (
     <Routes>
       <Route path='/' element={<Layout />}>
@@ -20,7 +26,9 @@ function App() {
         </Route>
         <Route element={<RequireAuth />}>
           <Route path='flashcards' element={<Flashcards />} />
+          <Route path='devices' element={<DeviceManagement />} />
         </Route>
+        <Route path='authorize/:userCode' element={<DeviceAuth />} />
       </Route>
     </Routes>
   );

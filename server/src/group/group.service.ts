@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { Group, Card } from '@prisma/client';
+import { unlink } from 'fs/promises';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 type GroupWithCardsAndChildren = Group & { 
   cards: Card[]; 
@@ -101,7 +104,24 @@ export class GroupService {
     groupId: string,
   ): Promise<{ success: boolean; message?: string }> {
     try {
+      // First, get all cards in this group and its children to delete their media files
+      const allGroupIds = await this.getAllChildGroupIds(groupId);
+      allGroupIds.push(groupId);
+      
+      const cards = await this.databaseService.card.findMany({
+        where: { groupId: { in: allGroupIds } },
+        select: { questionMediaUrl: true, answerMediaUrl: true },
+      });
+      
+      // Delete the group (cascade will delete cards)
       await this.databaseService.group.delete({ where: { id: groupId } });
+      
+      // Delete associated media files
+      for (const card of cards) {
+        await this.deleteMediaFiles(card.questionMediaUrl);
+        await this.deleteMediaFiles(card.answerMediaUrl);
+      }
+      
       return { success: true };
     } catch (err: unknown) {
       let msg = 'Failed to delete group';
@@ -115,6 +135,45 @@ export class GroupService {
         );
       }
       return { success: false, message: msg };
+    }
+  }
+
+  private async getAllChildGroupIds(groupId: string): Promise<string[]> {
+    const children = await this.databaseService.group.findMany({
+      where: { parentId: groupId },
+      select: { id: true },
+    });
+    
+    const childIds: string[] = [];
+    for (const child of children) {
+      childIds.push(child.id);
+      const grandChildren = await this.getAllChildGroupIds(child.id);
+      childIds.push(...grandChildren);
+    }
+    return childIds;
+  }
+
+  private async deleteMediaFiles(mediaUrl: string | null): Promise<void> {
+    if (!mediaUrl) return;
+    
+    // Handle comma-separated URLs (multiple screenshots)
+    const urls = mediaUrl.split(',');
+    
+    for (const url of urls) {
+      const trimmedUrl = url.trim();
+      if (trimmedUrl.startsWith('/uploads/')) {
+        const filename = trimmedUrl.replace('/uploads/', '');
+        const filePath = join(process.cwd(), 'uploads', filename);
+        
+        try {
+          if (existsSync(filePath)) {
+            await unlink(filePath);
+            this.logger.log(`Deleted media file: ${filename}`);
+          }
+        } catch (err) {
+          this.logger.error(`Failed to delete file ${filename}: ${err}`);
+        }
+      }
     }
   }
 

@@ -46,6 +46,11 @@ interface MediaContentProps {
 const MediaContent = ({ text, type, mediaUrl, label }: MediaContentProps) => {
   const labelColor = label === 'Question' ? 'primary.main' : 'secondary.main';
 
+  // Debug: Log media URL to console
+  if (mediaUrl && type !== 'TEXT') {
+    console.log(`${label} media URL:`, mediaUrl, `Type:`, type);
+  }
+
   return (
     <Box sx={{ mb: 3 }}>
       <Typography
@@ -68,22 +73,38 @@ const MediaContent = ({ text, type, mediaUrl, label }: MediaContentProps) => {
       )}
 
       {type === 'IMAGE' && mediaUrl && (
-        <Box
-          component="img"
-          src={mediaUrl}
-          alt={label}
-          loading="lazy"
-          sx={{
-            maxWidth: '100%',
-            maxHeight: 300,
-            borderRadius: 2,
-            boxShadow: 2,
-          }}
-        />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {mediaUrl.split(',').map((url, index) => (
+            <Box
+              key={index}
+              component="img"
+              src={url.trim()}
+              alt={`${label} ${index + 1}`}
+              loading="lazy"
+              onError={(e) => {
+                console.error(`Failed to load image: ${url}`, e);
+              }}
+              sx={{
+                maxWidth: '100%',
+                maxHeight: 300,
+                borderRadius: 2,
+                boxShadow: 2,
+              }}
+            />
+          ))}
+        </Box>
       )}
 
       {type === 'AUDIO' && mediaUrl && (
-        <Box component="audio" controls src={mediaUrl} sx={{ width: '100%' }} />
+        <Box 
+          component="audio" 
+          controls 
+          src={mediaUrl} 
+          onError={(e) => {
+            console.error(`Failed to load audio: ${mediaUrl}`, e);
+          }}
+          sx={{ width: '100%' }} 
+        />
       )}
 
       {type === 'VIDEO' && mediaUrl && (

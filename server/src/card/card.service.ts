@@ -4,6 +4,7 @@ import { CreateCardDto } from './dto/create-card.dto';
 import { ReviewCardDto, ReviewResponse } from './dto/review-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { Card, Prisma } from '@prisma/client';
+import { EventsGateway } from '../events/events.gateway';
 
 export interface ServiceResponse<T = void> {
   success: boolean;
@@ -42,10 +43,16 @@ const getErrorMessage = (e: unknown): string =>
 export class CardService {
   private readonly logger = new Logger(CardService.name);
 
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly eventsGateway: EventsGateway,
+  ) {}
 
   async createCard(dto: CreateCardDto): Promise<ServiceResponse<Card>> {
     try {
+      if (!dto.groupId) {
+        return { success: false, message: 'groupId is required' };
+      }
       const card = await this.db.card.create({
         data: {
           groupId: dto.groupId,
@@ -57,6 +64,10 @@ export class CardService {
           answerMediaUrl: dto.answerMediaUrl,
         },
       });
+      
+      // Emit real-time event for new card
+      this.eventsGateway.emitCardAdded(dto.groupId, card);
+      
       return { success: true, data: card };
     } catch (e: unknown) {
       if (isPrismaError(e)) {

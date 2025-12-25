@@ -9,6 +9,8 @@ export class AuthController {
 
   @Post('signup')
   signup(@Body() dto: CreateUserDto) {
+    console.log('📝 Signup DTO received:', dto);
+    console.log('📝 Password field:', dto.password);
     return this.authService.signup(dto);
   }
 

@@ -10,6 +10,13 @@ export class UserService {
   async createUser(
     createUserDto: CreateUserDto,
   ): Promise<Omit<User, 'password'>> {
+    console.log('👤 Creating user with DTO:', createUserDto);
+    console.log('👤 Password value:', createUserDto.password, 'Type:', typeof createUserDto.password);
+    
+    if (!createUserDto.password) {
+      throw new Error('Password is required');
+    }
+    
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
     const fullName =

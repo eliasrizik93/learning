@@ -6,16 +6,34 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
-import type { AppDispatch } from '../../store/store';
-import { useDispatch } from 'react-redux';
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import type { AppDispatch, RootState } from '../../store/store';
+import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../../store/slices/authSlice';
 
 const SignIn = () => {
   const dispatch = useDispatch() as AppDispatch;
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuth);
 
   const [form, setForm] = useState({ email: '', password: '' });
-  // const [error, setError] = useState('');
+  const [hasRedirected, setHasRedirected] = useState(false);
+  
+  useEffect(() => {
+    if (isAuthenticated && !hasRedirected) {
+      const redirect = searchParams.get('redirect');
+      if (redirect) {
+        setHasRedirected(true);
+        navigate(redirect);
+      } else {
+        setHasRedirected(true);
+        navigate('/flashcards');
+      }
+    }
+  }, [isAuthenticated, navigate, searchParams, hasRedirected]);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     dispatch(loginUser(form));

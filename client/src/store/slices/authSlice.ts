@@ -47,9 +47,11 @@ export const signupUser = createAsyncThunk(
       firstName: string;
       lastName: string;
       birthday?: string;
+      profile?: string;
     },
     thunkAPI
   ) => {
+    console.log('Signup payload:', data);
     const res = await fetch('http://localhost:3000/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -58,6 +60,7 @@ export const signupUser = createAsyncThunk(
 
     if (!res.ok) {
       const error = await res.text();
+      console.error('Signup error:', error);
       return thunkAPI.rejectWithValue(error);
     }
     return await res.json();

@@ -12,7 +12,8 @@ import {
 
 import { CreateGroupDto } from './dto/create-group.dto';
 import { GroupService } from './group.service';
-import { GetUser, JwtAuthGuard } from '../auth/jwt-auth.guard'; // ADD
+import { GetUser } from '../auth/jwt-auth.guard';
+import { CombinedAuthGuard } from '../device-auth/combined-auth.guard';
 import { CardService } from '../card/card.service';
 import { CreateCardDto } from '../card/dto/create-card.dto';
 
@@ -35,7 +36,7 @@ export class GroupController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async createGroup(
     @Body() createGroupDto: CreateGroupDto,
     @GetUser() user: { id: number },
@@ -44,13 +45,13 @@ export class GroupController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async getAllGroups(@GetUser() user: { id: number }) {
     return this.groupsService.getAllGroups(user.id);
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async updateGroup(
     @Param('id') id: string,
     @Body() body: { name: string },
@@ -65,7 +66,7 @@ export class GroupController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async deleteGroup(@Param('id') id: string, @GetUser() user: { id: number }) {
     const ownerShipError = await this.checkGroupOwnership(id, user.id);
     if (ownerShipError) {
@@ -75,7 +76,7 @@ export class GroupController {
   }
 
   @Put(':id/move')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async moveGroup(
     @Param('id') id: string,
     @Body() body: { parentId: string | null },
@@ -96,7 +97,7 @@ export class GroupController {
   }
 
   @Post(':id/card')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async addCardToGroup(
     @Param('id') groupId: string,
     @Body() body: CreateCardDto,
@@ -115,7 +116,7 @@ export class GroupController {
   }
 
   @Get(':id/stats')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async getGroupStats(
     @Param('id') groupId: string,
     @GetUser() user: { id: number },
@@ -128,7 +129,7 @@ export class GroupController {
   }
 
   @Get(':id/due')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async getGroupDueCards(
     @Param('id') groupId: string,
     @GetUser() user: { id: number },
@@ -141,7 +142,7 @@ export class GroupController {
   }
 
   @Post(':id/reset')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async resetGroupProgress(
     @Param('id') groupId: string,
     @GetUser() user: { id: number },
@@ -154,7 +155,7 @@ export class GroupController {
   }
 
   @Get(':id/cards')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CombinedAuthGuard)
   async getGroupAllCards(
     @Param('id') groupId: string,
     @GetUser() user: { id: number },

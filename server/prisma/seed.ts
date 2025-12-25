@@ -3,7 +3,55 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+async function fixMediaUrls() {
+  console.log('🔧 Fixing media URLs in database...\n');
+  
+  // Find all cards with absolute URLs
+  const cards = await prisma.card.findMany({
+    where: {
+      OR: [
+        { questionMediaUrl: { contains: 'http://localhost:3000' } },
+        { answerMediaUrl: { contains: 'http://localhost:3000' } }
+      ]
+    },
+  });
+
+  console.log(`Found ${cards.length} cards with absolute URLs to fix.\n`);
+
+  let fixed = 0;
+  for (const card of cards) {
+    const updates: { questionMediaUrl?: string; answerMediaUrl?: string } = {};
+    
+    if (card.questionMediaUrl && card.questionMediaUrl.includes('http://localhost:3000')) {
+      updates.questionMediaUrl = card.questionMediaUrl.replace('http://localhost:3000', '');
+      console.log(`Card ${card.id}: Question URL fixed`);
+    }
+    
+    if (card.answerMediaUrl && card.answerMediaUrl.includes('http://localhost:3000')) {
+      updates.answerMediaUrl = card.answerMediaUrl.replace('http://localhost:3000', '');
+      console.log(`Card ${card.id}: Answer URL fixed`);
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await prisma.card.update({
+        where: { id: card.id },
+        data: updates,
+      });
+      fixed++;
+    }
+  }
+
+  if (fixed > 0) {
+    console.log(`\n✅ Fixed ${fixed} cards! Media URLs are now relative.\n`);
+  } else {
+    console.log('✅ No cards needed fixing.\n');
+  }
+}
+
 async function main() {
+  // First, fix any broken media URLs
+  await fixMediaUrls();
+
   // Only run in development
   if (process.env.NODE_ENV === 'production') {
     console.log('Seed script should not run in production');
