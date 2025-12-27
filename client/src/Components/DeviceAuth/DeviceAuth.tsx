@@ -16,7 +16,7 @@ import type { RootState } from '../../store/store';
 const DeviceAuth = () => {
   const { userCode } = useParams<{ userCode: string }>();
   const navigate = useNavigate();
-  const { token, isAuth } = useSelector((state: RootState) => state.auth);
+  const { token, isAuth, hydrated } = useSelector((state: RootState) => state.auth);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +25,12 @@ const DeviceAuth = () => {
   const [authorizing, setAuthorizing] = useState(false);
 
   useEffect(() => {
+    // Wait for auth hydration to complete
+    if (!hydrated) {
+      console.log('DeviceAuth - waiting for hydration...');
+      return;
+    }
+    
     console.log('DeviceAuth useEffect - isAuth:', isAuth, 'token:', token ? 'exists' : 'missing', 'userCode:', userCode);
     
     if (!isAuth || !token) {
@@ -46,6 +52,16 @@ const DeviceAuth = () => {
         );
 
         console.log('Verify response status:', res.status);
+
+        // If 401, token is expired - redirect to login
+        if (res.status === 401) {
+          console.log('Token expired, redirecting to signin');
+          // Clear invalid token
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate(`/signin?redirect=/authorize/${userCode}`);
+          return;
+        }
 
         if (!res.ok) {
           throw new Error('Failed to verify code');
@@ -75,11 +91,12 @@ const DeviceAuth = () => {
     };
 
     verifyCode();
-  }, [userCode, token, isAuth, navigate]);
+  }, [userCode, token, isAuth, hydrated, navigate]);
 
   const handleAuthorize = async () => {
     setAuthorizing(true);
     setError(null);
+    console.log('Authorizing device with user_code:', userCode);
 
     try {
       const res = await fetch('http://localhost:3000/device-auth/authorize', {
@@ -91,12 +108,17 @@ const DeviceAuth = () => {
         body: JSON.stringify({ user_code: userCode }),
       });
 
+      console.log('Authorize response status:', res.status);
+      const data = await res.json();
+      console.log('Authorize response data:', data);
+
       if (!res.ok) {
-        throw new Error('Failed to authorize device');
+        throw new Error(data.message || 'Failed to authorize device');
       }
 
       setAuthorized(true);
-    } catch {
+    } catch (err) {
+      console.error('Authorize error:', err);
       setError('Failed to authorize device. Please try again.');
     } finally {
       setAuthorizing(false);
@@ -107,12 +129,15 @@ const DeviceAuth = () => {
     navigate('/');
   };
 
-  if (loading) {
+  // Show loading while waiting for hydration or verification
+  if (!hydrated || loading) {
     return (
       <Container maxWidth="sm">
         <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: 'center' }}>
           <CircularProgress />
-          <Typography sx={{ mt: 2 }}>Verifying authorization code...</Typography>
+          <Typography sx={{ mt: 2 }}>
+            {!hydrated ? 'Loading...' : 'Verifying authorization code...'}
+          </Typography>
         </Paper>
       </Container>
     );

@@ -35,6 +35,36 @@ export const hydrateAuth = createAsyncThunk('auth/hydrateAuth', async () => {
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   const user = userStr ? (JSON.parse(userStr) as User) : null;
+  
+  // If we have a token, verify it's still valid with the server
+  if (token) {
+    try {
+      const res = await fetch('http://localhost:3000/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (!res.ok) {
+        // Token is invalid/expired - clear it
+        console.log('Token expired or invalid, clearing auth');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        return { token: null, user: null };
+      }
+      
+      // Token is valid - optionally refresh user data from server
+      const userData = await res.json();
+      if (userData && userData.id) {
+        localStorage.setItem('user', JSON.stringify(userData));
+        return { token, user: userData as User };
+      }
+    } catch (error) {
+      // Server might be down - keep the token for now but log warning
+      console.warn('Could not verify token with server:', error);
+    }
+  }
+  
   return { token, user };
 });
 
