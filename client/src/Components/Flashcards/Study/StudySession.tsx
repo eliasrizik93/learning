@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
@@ -11,6 +11,7 @@ import {
   Chip,
   Stack,
   IconButton,
+  Paper,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -18,6 +19,7 @@ import {
   ThumbDown,
   ThumbUp,
   Visibility,
+  VolumeUp,
 } from '@mui/icons-material';
 import type { AppDispatch, RootState } from '../../../store/store';
 import {
@@ -45,11 +47,36 @@ interface MediaContentProps {
 
 const MediaContent = ({ text, type, mediaUrl, label }: MediaContentProps) => {
   const labelColor = label === 'Question' ? 'primary.main' : 'secondary.main';
+  const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement>(null);
+  const [hotkey, setHotkey] = useState('r');
+
+  // Load hotkey from localStorage
+  useEffect(() => {
+    const savedHotkey = localStorage.getItem('audioReplayHotkey');
+    if (savedHotkey) {
+      setHotkey(savedHotkey);
+    }
+  }, []);
 
   // Debug: Log media URL to console
   if (mediaUrl && type !== 'TEXT') {
     console.log(`${label} media URL:`, mediaUrl, `Type:`, type);
   }
+
+  // Add hotkey to replay media
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === hotkey.toLowerCase()) {
+        if (mediaRef.current) {
+          mediaRef.current.currentTime = 0;
+          mediaRef.current.play();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [hotkey]);
 
   return (
     <Box sx={{ mb: 3 }}>
@@ -85,8 +112,8 @@ const MediaContent = ({ text, type, mediaUrl, label }: MediaContentProps) => {
                 console.error(`Failed to load image: ${url}`, e);
               }}
               sx={{
-                maxWidth: '100%',
-                maxHeight: 300,
+                width: '100%',
+                height: 'auto',
                 borderRadius: 2,
                 boxShadow: 2,
               }}
@@ -96,27 +123,63 @@ const MediaContent = ({ text, type, mediaUrl, label }: MediaContentProps) => {
       )}
 
       {type === 'AUDIO' && mediaUrl && (
-        <Box 
-          component="audio" 
-          controls 
-          src={mediaUrl} 
-          onError={(e) => {
-            console.error(`Failed to load audio: ${mediaUrl}`, e);
+        <Paper 
+          elevation={3}
+          sx={{ 
+            p: 3, 
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           }}
-          sx={{ width: '100%' }} 
-        />
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <VolumeUp sx={{ fontSize: 40, color: 'white' }} />
+            <Box sx={{ flexGrow: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="body2" sx={{ color: 'white', opacity: 0.9 }}>
+                  Audio {label}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'white', opacity: 0.8, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  Press <Box component="kbd" sx={{ 
+                    px: 0.8, 
+                    py: 0.3, 
+                    borderRadius: 1, 
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    fontWeight: 700,
+                    fontSize: '0.85rem'
+                  }}>{hotkey.toUpperCase()}</Box> to replay
+                </Typography>
+              </Box>
+              <Box 
+                component="audio" 
+                ref={mediaRef}
+                controls 
+                src={mediaUrl} 
+                onError={(e) => {
+                  console.error(`Failed to load audio: ${mediaUrl}`, e);
+                }}
+                sx={{ 
+                  width: '100%',
+                  '& audio': {
+                    width: '100%',
+                  }
+                }} 
+              />
+            </Box>
+          </Box>
+        </Paper>
       )}
 
       {type === 'VIDEO' && mediaUrl && (
         <Box
           component="video"
+          ref={mediaRef}
           controls
           src={mediaUrl}
-          sx={{ maxWidth: '100%', maxHeight: 300, borderRadius: 2 }}
+          sx={{ width: '100%', height: 'auto', borderRadius: 2 }}
         />
       )}
 
-      {text && type !== 'TEXT' && (
+      {text && text.trim() && type !== 'TEXT' && (
         <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
           {text}
         </Typography>
@@ -196,7 +259,7 @@ const StudySession = ({ groupId, groupName, onBack, practiceMode = false }: Stud
 
   if (isLoading && !hasInitialized) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         <LinearProgress />
         <Typography sx={{ mt: 2, textAlign: 'center' }}>
           Loading cards...
@@ -207,7 +270,7 @@ const StudySession = ({ groupId, groupName, onBack, practiceMode = false }: Stud
 
   if (isSessionComplete) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
         <Card
           elevation={6}
           sx={{
@@ -247,7 +310,7 @@ const StudySession = ({ groupId, groupName, onBack, practiceMode = false }: Stud
   const progress = totalCards > 0 ? (completedCards / totalCards) * 100 : 0;
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
         <IconButton onClick={handleBack}>

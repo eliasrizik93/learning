@@ -24,4 +24,15 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   profile?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @IsOptional()
+  profileVisible?: boolean;
 }

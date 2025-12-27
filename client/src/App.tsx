@@ -10,6 +10,8 @@ import Home from './Components/Home/Home';
 import Flashcards from './Components/Flashcards/Flashcards';
 import DeviceAuth from './Components/DeviceAuth/DeviceAuth';
 import DeviceManagement from './Components/DeviceManagement/DeviceManagement';
+import Profile from './Components/Profile/Profile';
+import Settings from './Components/Settings/Settings';
 import { useSocket } from './hooks/useSocket';
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
         <Route element={<RequireAuth />}>
           <Route path='flashcards' element={<Flashcards />} />
           <Route path='devices' element={<DeviceManagement />} />
+          <Route path='profile' element={<Profile />} />
+          <Route path='settings' element={<Settings />} />
         </Route>
         <Route path='authorize/:userCode' element={<DeviceAuth />} />
       </Route>

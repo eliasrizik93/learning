@@ -31,6 +31,9 @@ export class UserService {
         birthday: createUserDto.birthday
           ? new Date(createUserDto.birthday)
           : undefined,
+        country: createUserDto.country ?? undefined,
+        phoneNumber: createUserDto.phoneNumber ?? undefined,
+        profileVisible: createUserDto.profileVisible ?? true,
       },
     });
 

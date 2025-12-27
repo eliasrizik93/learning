@@ -5,4 +5,7 @@ export class CreateUserDto {
   password: string;
   birthday?: Date;
   profile?: string;
+  country?: string;
+  phoneNumber?: string;
+  profileVisible?: boolean;
 }
