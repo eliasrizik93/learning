@@ -1,14 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getAllGroups } from '../store/slices/groupSlice';
-import type { AppDispatch } from '../store/store';
+import { addNotification, updateUnreadCount } from '../store/slices/notificationSlice';
+import type { AppDispatch, RootState } from '../store/store';
+import type { Notification } from '../types';
 
 const SOCKET_URL = 'http://localhost:3000';
 
 export function useSocket() {
   const dispatch = useDispatch<AppDispatch>();
   const socketRef = useRef<Socket | null>(null);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isAuth = useSelector((state: RootState) => state.auth.isAuth);
 
   useEffect(() => {
     // Connect to WebSocket server
@@ -20,6 +24,10 @@ export function useSocket() {
 
     socket.on('connect', () => {
       console.log('[Socket] Connected to server');
+      // Register user for notifications
+      if (isAuth && user?.id) {
+        socket.emit('register-user', user.id);
+      }
     });
 
     socket.on('disconnect', () => {
@@ -45,11 +53,29 @@ export function useSocket() {
       dispatch(getAllGroups());
     });
 
+    // Listen for notification events
+    socket.on('notification', (notification: Notification) => {
+      console.log('[Socket] Notification received:', notification);
+      dispatch(addNotification(notification));
+    });
+
+    // Listen for notification count updates
+    socket.on('notification-count', (count: number) => {
+      dispatch(updateUnreadCount(count));
+    });
+
     // Cleanup on unmount
     return () => {
       socket.disconnect();
     };
-  }, [dispatch]);
+  }, [dispatch, isAuth, user?.id]);
+
+  // Re-register when user changes
+  useEffect(() => {
+    if (socketRef.current?.connected && isAuth && user?.id) {
+      socketRef.current.emit('register-user', user.id);
+    }
+  }, [isAuth, user?.id]);
 
   return socketRef.current;
 }

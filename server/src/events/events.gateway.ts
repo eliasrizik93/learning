@@ -3,6 +3,7 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
@@ -18,6 +19,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private readonly logger = new Logger(EventsGateway.name);
+  private userSockets: Map<number, Set<string>> = new Map();
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
@@ -25,6 +27,22 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
+    // Remove from user sockets
+    this.userSockets.forEach((sockets, userId) => {
+      sockets.delete(client.id);
+      if (sockets.size === 0) {
+        this.userSockets.delete(userId);
+      }
+    });
+  }
+
+  @SubscribeMessage('register-user')
+  handleRegisterUser(client: Socket, userId: number) {
+    if (!this.userSockets.has(userId)) {
+      this.userSockets.set(userId, new Set());
+    }
+    this.userSockets.get(userId)!.add(client.id);
+    this.logger.log(`User ${userId} registered with socket ${client.id}`);
   }
 
   // Emit event when a card is added
@@ -43,5 +61,26 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   emitGroupsChanged() {
     this.logger.log('Emitting groups-changed event');
     this.server.emit('groups-changed');
+  }
+
+  // Emit notification to specific user
+  emitNotification(userId: number, notification: any) {
+    const sockets = this.userSockets.get(userId);
+    if (sockets) {
+      sockets.forEach((socketId) => {
+        this.server.to(socketId).emit('notification', notification);
+      });
+      this.logger.log(`Emitting notification to user ${userId}`);
+    }
+  }
+
+  // Emit notification count update
+  emitNotificationCount(userId: number, count: number) {
+    const sockets = this.userSockets.get(userId);
+    if (sockets) {
+      sockets.forEach((socketId) => {
+        this.server.to(socketId).emit('notification-count', count);
+      });
+    }
   }
 }

@@ -3,6 +3,9 @@ import messageReducer from './slices/messageSlice';
 import authReducer from './slices/authSlice';
 import groupReducer from './slices/groupSlice';
 import cardReducer from './slices/cardSlice';
+import notificationReducer from './slices/notificationSlice';
+import supportReducer from './slices/supportSlice';
+import discoverReducer from './slices/discoverSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +13,9 @@ export const store = configureStore({
     auth: authReducer,
     groups: groupReducer,
     cards: cardReducer,
+    notifications: notificationReducer,
+    support: supportReducer,
+    discover: discoverReducer,
   },
 });
 

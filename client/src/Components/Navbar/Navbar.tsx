@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
 import type { AppDispatch, RootState } from '../../store/store';
 import { logout as logoutAction } from '../../store/slices/authSlice';
-import { School, LogoutRounded, Devices, Person, Settings } from '@mui/icons-material';
+import { School, LogoutRounded, Devices, Person, Settings, Public, Support } from '@mui/icons-material';
 import { useState } from 'react';
+import Notifications from '../Notifications/Notifications';
 
 const Navbar = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -107,12 +108,27 @@ const Navbar = () => {
               >
                 Devices
               </Button>
+              <Button
+                component={NavLink}
+                to='/discover'
+                startIcon={<Public />}
+                sx={{
+                  color: 'white',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' },
+                  '&.active': { backgroundColor: 'rgba(255,255,255,0.2)' },
+                }}
+              >
+                Discover
+              </Button>
             </>
           )}
         </Box>
 
         {/* Right Side - User info and logout */}
         <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+          {isAuth && <Notifications />}
           {!isAuth ? (
             <>
               <Button
@@ -195,6 +211,12 @@ const Navbar = () => {
                     <Settings fontSize="small" />
                   </ListItemIcon>
                   Settings
+                </MenuItem>
+                <MenuItem onClick={() => { handleMenuClose(); navigate('/support'); }}>
+                  <ListItemIcon>
+                    <Support fontSize="small" />
+                  </ListItemIcon>
+                  Support
                 </MenuItem>
                 <Divider />
                 <MenuItem onClick={handleLogout}>

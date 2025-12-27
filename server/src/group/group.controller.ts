@@ -8,10 +8,12 @@ import {
   Put,
   UseGuards,
   Param,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 
 import { CreateGroupDto } from './dto/create-group.dto';
-import { GroupService } from './group.service';
+import { GroupService, UpdateGroupPublicDto, ShareGroupDto } from './group.service';
 import { GetUser } from '../auth/jwt-auth.guard';
 import { CombinedAuthGuard } from '../device-auth/combined-auth.guard';
 import { CardService } from '../card/card.service';
@@ -165,5 +167,65 @@ export class GroupController {
       return ownershipError;
     }
     return this.cardService.getGroupAllCards(groupId);
+  }
+
+  @Put(':id/public')
+  @UseGuards(CombinedAuthGuard)
+  async updatePublicSettings(
+    @Param('id') groupId: string,
+    @Body() dto: UpdateGroupPublicDto,
+    @GetUser() user: { id: number },
+  ) {
+    const ownershipError = await this.checkGroupOwnership(groupId, user.id);
+    if (ownershipError) {
+      return ownershipError;
+    }
+    return this.groupsService.updateGroupPublicSettings(groupId, dto);
+  }
+
+  @Post(':id/share')
+  @UseGuards(CombinedAuthGuard)
+  async shareGroup(
+    @Param('id') groupId: string,
+    @Body() dto: ShareGroupDto,
+    @GetUser() user: { id: number },
+  ) {
+    const ownershipError = await this.checkGroupOwnership(groupId, user.id);
+    if (ownershipError) {
+      return ownershipError;
+    }
+    return this.groupsService.shareGroupWithUser(groupId, dto.recipientEmail, user.id);
+  }
+
+  @Post(':id/copy')
+  @UseGuards(CombinedAuthGuard)
+  async copyPublicGroup(
+    @Param('id') groupId: string,
+    @GetUser() user: { id: number },
+  ) {
+    const result = await this.groupsService.copyPublicGroupToUser(groupId, user.id);
+    
+    if (result.alreadyExists) {
+      throw new HttpException(
+        { 
+          success: false, 
+          message: result.message, 
+          alreadyExists: true,
+          existingGroupId: result.data?.id,
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
+    
+    return result;
+  }
+
+  @Post('check-copies')
+  @UseGuards(CombinedAuthGuard)
+  async checkUserHasCopies(
+    @Body() body: { groupIds: string[] },
+    @GetUser() user: { id: number },
+  ) {
+    return this.groupsService.checkUserHasGroupCopies(body.groupIds, user.id);
   }
 }

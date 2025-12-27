@@ -17,31 +17,47 @@ model User {
   country         String?
   phoneNumber     String?
   profileVisible  Boolean   @default(true)
+  isAdmin         Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt @default(now()) 
 
   groups             Group[]
   deviceTokens       DeviceToken[]
   deviceAuthRequests DeviceAuthRequest[]
+  notifications      Notification[]
+  sentTickets        SupportTicket[]      @relation("TicketSender")
+  assignedTickets    SupportTicket[]      @relation("TicketAssignee")
+  ticketReplies      TicketReply[]
 }
 
 model Group {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  cards     Card[]
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  cards       Card[]
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
   
   // Nested groups support
   parentId  String?
   parent    Group?   @relation("GroupHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children  Group[]  @relation("GroupHierarchy")
   
+  // Public group fields
+  isPublic    Boolean  @default(false)
+  language    String?
+  tags        String[] @default([])
+  
+  // Reference to original group (for copies)
+  originalGroupId String?
+  
   @@unique([userId, name, parentId])
+  @@unique([userId, originalGroupId]) // Prevent adding same public group twice
   @@index([name])
   @@index([parentId])
+  @@index([isPublic])
 }
 enum ContentType {
   TEXT
@@ -130,4 +146,75 @@ model DeviceAuthRequest {
 
   @@index([deviceCode])
   @@index([userCode])
+}
+
+// Notification system
+enum NotificationType {
+  GROUP_SHARED
+  TICKET_REPLY
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  data      Json?            // Extra data like groupId, ticketId, etc.
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
+
+// Support ticket system
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model SupportTicket {
+  id          String         @id @default(uuid())
+  subject     String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  // Sender (user who created the ticket)
+  senderId    Int
+  sender      User           @relation("TicketSender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  // Assignee (admin handling the ticket)
+  assigneeId  Int?
+  assignee    User?          @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  
+  replies     TicketReply[]
+
+  @@index([senderId])
+  @@index([status])
+}
+
+model TicketReply {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
 }

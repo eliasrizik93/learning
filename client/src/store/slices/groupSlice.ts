@@ -202,6 +202,43 @@ export const addCardToGroup = createAsyncThunk<
   }
 });
 
+export const shareGroup = createAsyncThunk<
+  { success: boolean; message?: string },
+  { groupId: string; recipientEmail: string },
+  { state: RootState; rejectValue: string }
+>('groups/share', async ({ groupId, recipientEmail }, thunkAPI) => {
+  try {
+    const res = await apiFetch(
+      `/group/${groupId}/share`,
+      { method: 'POST', body: JSON.stringify({ recipientEmail }) },
+      thunkAPI.getState
+    );
+    if (!res.ok) return thunkAPI.rejectWithValue(await parseApiError(res));
+    return { success: true };
+  } catch (e) {
+    return thunkAPI.rejectWithValue(handleAsyncError(e));
+  }
+});
+
+export const updateGroupPublicSettings = createAsyncThunk<
+  Group,
+  { groupId: string; isPublic?: boolean; description?: string; language?: string; tags?: string[] },
+  { state: RootState; rejectValue: string }
+>('groups/updatePublic', async ({ groupId, ...settings }, thunkAPI) => {
+  try {
+    const res = await apiFetch(
+      `/group/${groupId}/public`,
+      { method: 'PUT', body: JSON.stringify(settings) },
+      thunkAPI.getState
+    );
+    if (!res.ok) return thunkAPI.rejectWithValue(await parseApiError(res));
+    const { data } = await res.json();
+    return transformApiGroup(data);
+  } catch (e) {
+    return thunkAPI.rejectWithValue(handleAsyncError(e));
+  }
+});
+
 const groupSlice = createSlice({
   name: 'groups',
   initialState,
@@ -293,6 +330,21 @@ const groupSlice = createSlice({
       .addCase(deleteGroup.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload ?? 'Failed to delete group';
+      })
+      .addCase(updateGroupPublicSettings.fulfilled, (state, action) => {
+        const findAndUpdate = (groups: Group[]): boolean => {
+          for (let i = 0; i < groups.length; i++) {
+            if (groups[i].id === action.payload.id) {
+              groups[i] = { ...groups[i], ...action.payload };
+              return true;
+            }
+            if (groups[i].children && findAndUpdate(groups[i].children!)) {
+              return true;
+            }
+          }
+          return false;
+        };
+        findAndUpdate(state.groupsList);
       });
   },
 });

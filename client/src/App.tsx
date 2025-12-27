@@ -12,6 +12,8 @@ import DeviceAuth from './Components/DeviceAuth/DeviceAuth';
 import DeviceManagement from './Components/DeviceManagement/DeviceManagement';
 import Profile from './Components/Profile/Profile';
 import Settings from './Components/Settings/Settings';
+import Discover from './Components/Discover/Discover';
+import Support from './Components/Support/Support';
 import { useSocket } from './hooks/useSocket';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
           <Route path='devices' element={<DeviceManagement />} />
           <Route path='profile' element={<Profile />} />
           <Route path='settings' element={<Settings />} />
+          <Route path='discover' element={<Discover />} />
+          <Route path='support' element={<Support />} />
         </Route>
         <Route path='authorize/:userCode' element={<DeviceAuth />} />
       </Route>

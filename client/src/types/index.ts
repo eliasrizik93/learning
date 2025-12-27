@@ -34,12 +34,73 @@ export interface Card {
 export interface Group {
   id: string;
   name: string;
+  description?: string;
   createdAt: string;
   updatedAt: string;
   userId: number;
   cards: Card[];
   parentId?: string | null;
   children?: Group[];
+  isPublic?: boolean;
+  language?: string;
+  tags?: string[];
+  originalGroupId?: string;
+}
+
+// Notification types
+export type NotificationType = 'GROUP_SHARED' | 'TICKET_REPLY' | 'SYSTEM';
+
+export interface Notification {
+  id: string;
+  userId: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  data?: Record<string, unknown>;
+  createdAt: string;
+}
+
+// Support ticket types
+export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface TicketReply {
+  id: string;
+  ticketId: string;
+  userId: number;
+  user: { id: number; name: string };
+  message: string;
+  createdAt: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  subject: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  createdAt: string;
+  updatedAt: string;
+  senderId: number;
+  sender: { id: number; name: string; email?: string };
+  assigneeId?: number;
+  assignee?: { id: number; name: string };
+  replies: TicketReply[];
+}
+
+// Public group preview for discover page
+export interface PublicGroupPreview {
+  id: string;
+  name: string;
+  description?: string;
+  language?: string;
+  tags?: string[];
+  createdAt: string;
+  creator: { id: number; name: string };
+  cardCount: number;
+  subgroupCount: number;
+  sampleCards?: { id: number; questionText?: string }[];
 }
 
 // Legacy aliases for backward compatibility

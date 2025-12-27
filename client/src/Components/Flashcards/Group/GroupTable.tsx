@@ -18,6 +18,9 @@ import {
   PlayArrow,
   CreateNewFolder,
   DriveFileMove,
+  Share,
+  Settings,
+  Public,
 } from '@mui/icons-material';
 import type { GroupType } from '../../../types';
 import { useMemo, useState } from 'react';
@@ -27,6 +30,8 @@ import { addCardToGroup, updateGroup, getAllGroups, createGroup, moveGroup } fro
 import { resetGroupProgress } from '../../../store/slices/cardSlice';
 import AddCardModal from './AddCardModal/AddCardModal';
 import DeleteGroupModal from './DeleteGroupModal/DeleteGroupModal';
+import ShareGroupDialog from '../ShareGroupDialog';
+import GroupSettingsDialog from '../GroupSettingsDialog';
 
 type StudyMode = 'review' | 'practice';
 
@@ -101,6 +106,8 @@ const GroupTable: React.FC<GroupTableProps> = ({
   const [openModal, setOpenModal] = useState(false);
   const [newCard, setNewCard] = useState({ question: '', answer: '' });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => {
     setOpenModal(false);
@@ -186,6 +193,20 @@ const GroupTable: React.FC<GroupTableProps> = ({
         groupId={id}
         groupName={name}
         onClose={handleCloseDeleteModal}
+      />
+      <ShareGroupDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        groupId={id}
+        groupName={name}
+      />
+      <GroupSettingsDialog
+        open={settingsOpen}
+        onClose={() => {
+          setSettingsOpen(false);
+          dispatch(getAllGroups());
+        }}
+        group={group}
       />
       <TableRow
         key={id}
@@ -421,6 +442,30 @@ const GroupTable: React.FC<GroupTableProps> = ({
                 </IconButton>
               </Tooltip>
             )}
+            <Tooltip title={group.isPublic ? 'Public Group - Click for Settings' : 'Group Settings'}>
+              <IconButton
+                size='small'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSettingsOpen(true);
+                }}
+                sx={{ color: group.isPublic ? 'success.main' : 'text.secondary' }}
+              >
+                {group.isPublic ? <Public fontSize='small' /> : <Settings fontSize='small' />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Share Group'>
+              <IconButton
+                size='small'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShareOpen(true);
+                }}
+                sx={{ color: 'info.main' }}
+              >
+                <Share fontSize='small' />
+              </IconButton>
+            </Tooltip>
             {totalCards > 0 && (
               <Tooltip title='Practice All (no progress tracking)'>
                 <IconButton
