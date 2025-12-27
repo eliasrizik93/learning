@@ -3,10 +3,14 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard, GetUser } from './jwt-auth.guard';
+import { UserService } from '../user/user.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private userService: UserService,
+  ) {}
 
   @Post('signup')
   signup(@Body() dto: CreateUserDto) {
@@ -22,7 +26,12 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getMe(@GetUser() user: any) {
-    return user;
+  async getMe(@GetUser() user: any) {
+    // Fetch full user data from database
+    const fullUser = await this.userService.getUserById(user.id);
+    if (!fullUser) {
+      throw new Error('User not found');
+    }
+    return fullUser;
   }
 }

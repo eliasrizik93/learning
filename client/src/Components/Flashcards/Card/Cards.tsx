@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -191,7 +191,7 @@ const Cards = () => {
               Question
             </Typography>
             <Typography variant='h6' sx={{ mb: 3, lineHeight: 1.6 }}>
-              {currentCard.question}
+              {currentCard.questionText}
             </Typography>
 
             {showAnswer && (
@@ -205,7 +205,7 @@ const Cards = () => {
                   Answer
                 </Typography>
                 <Typography variant='h6' sx={{ lineHeight: 1.6 }}>
-                  {currentCard.answer}
+                  {currentCard.answerText}
                 </Typography>
               </Box>
             )}

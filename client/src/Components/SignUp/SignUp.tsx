@@ -10,6 +10,7 @@ import {
   Autocomplete,
   FormControlLabel,
   Switch,
+  Alert,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -21,6 +22,8 @@ import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from 'r
 import { useDispatch, useSelector } from 'react-redux';
 import { signupUser } from '../../store/slices/authSlice';
 import type { AppDispatch, RootState } from '../../store/store';
+import { uploadFile } from '../../lib/uploadFile';
+import { CloudUpload } from '@mui/icons-material';
 
 const initialForm = {
   firstName: '',
@@ -83,8 +86,11 @@ const SignUp = () => {
   const [errors, setErrors] = useState<Errors>({});
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [profileInputType, setProfileInputType] = useState<'url' | 'file'>('url');
 
   const firstNameRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     firstNameRef.current?.focus();
@@ -116,6 +122,19 @@ const SignUp = () => {
       }
       return newErrors;
     });
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setUploadingProfile(true);
+    try {
+      const url = await uploadFile(file);
+      setForm((f) => ({ ...f, profile: url }));
+    } catch (err) {
+      console.error('Upload error:', err);
+      setErrors((prev) => ({ ...prev, profile: 'Failed to upload image' }));
+    } finally {
+      setUploadingProfile(false);
+    }
   };
 
   const validate = () => {
@@ -295,16 +314,68 @@ const SignUp = () => {
             />
           </LocalizationProvider>
 
-          <TextField
-            fullWidth
-            label='Profile URL'
-            name='profile'
-            type='url'
-            value={form.profile}
-            onChange={handleChange}
-            margin='normal'
-            sx={hideAsteriskSx}
-          />
+          <Box sx={{ mt: 2, mb: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <Button
+                variant={profileInputType === 'url' ? 'contained' : 'outlined'}
+                onClick={() => setProfileInputType('url')}
+                size='small'
+              >
+                Enter URL
+              </Button>
+              <Button
+                variant={profileInputType === 'file' ? 'contained' : 'outlined'}
+                onClick={() => setProfileInputType('file')}
+                size='small'
+                startIcon={<CloudUpload />}
+              >
+                Upload from PC
+              </Button>
+            </Box>
+            {profileInputType === 'url' ? (
+              <TextField
+                fullWidth
+                label='Profile Picture URL'
+                name='profile'
+                type='url'
+                value={form.profile}
+                onChange={handleChange}
+                margin='normal'
+                placeholder='https://example.com/image.jpg'
+                sx={hideAsteriskSx}
+              />
+            ) : (
+              <Box>
+                <Button
+                  variant='outlined'
+                  component='label'
+                  fullWidth
+                  startIcon={<CloudUpload />}
+                  disabled={uploadingProfile}
+                  sx={{ mt: 1 }}
+                >
+                  {uploadingProfile ? 'Uploading...' : 'Choose Image File'}
+                  <input
+                    type='file'
+                    hidden
+                    accept='image/*'
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload(file);
+                      }
+                    }}
+                  />
+                </Button>
+                {form.profile && (
+                  <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+                    Image uploaded: {form.profile}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </Box>
 
           <Autocomplete
             options={countries}
@@ -350,9 +421,9 @@ const SignUp = () => {
           />
 
           {apiError && (
-            <Typography color='error' variant='body2' sx={{ mt: 1 }}>
+            <Alert severity='error' sx={{ mt: 2 }}>
               {apiError}
-            </Typography>
+            </Alert>
           )}
 
           <Button

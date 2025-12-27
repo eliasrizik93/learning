@@ -5,6 +5,7 @@ import {
   Paper,
   TextField,
   Typography,
+  Alert,
 } from '@mui/material';
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -17,6 +18,8 @@ const SignIn = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuth);
+  const loading = useSelector((state: RootState) => state.auth.loading);
+  const apiError = useSelector((state: RootState) => state.auth.error);
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [hasRedirected, setHasRedirected] = useState(false);
@@ -34,10 +37,14 @@ const SignIn = () => {
     }
   }, [isAuthenticated, navigate, searchParams, hasRedirected]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    dispatch(loginUser(form));
-    setForm({ email: '', password: '' });
+    try {
+      await dispatch(loginUser(form)).unwrap();
+      setForm({ email: '', password: '' });
+    } catch {
+      // Error is handled by Redux and displayed via apiError
+    }
   };
   const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,6 +56,11 @@ const SignIn = () => {
           Sign In
         </Typography>
         <Box component='form' onSubmit={handleSubmit}>
+          {apiError && (
+            <Alert severity='error' sx={{ mb: 2 }}>
+              {apiError}
+            </Alert>
+          )}
           <TextField
             fullWidth
             label='Email'
@@ -67,8 +79,14 @@ const SignIn = () => {
             value={form.password}
             margin='normal'
           />
-          <Button fullWidth variant='contained' type='submit' sx={{ mt: 2 }}>
-            Sign In
+          <Button
+            fullWidth
+            variant='contained'
+            type='submit'
+            sx={{ mt: 2 }}
+            disabled={loading}
+          >
+            {loading ? 'Signing in…' : 'Sign In'}
           </Button>
         </Box>
       </Paper>

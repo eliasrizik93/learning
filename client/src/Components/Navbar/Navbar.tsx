@@ -140,7 +140,7 @@ const Navbar = () => {
                   '&:hover': { backgroundColor: '#f1f5f9' },
                 }}
               >
-                Get Started
+                Sign Up
               </Button>
             </>
           ) : (

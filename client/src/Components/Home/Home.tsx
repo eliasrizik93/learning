@@ -107,7 +107,7 @@ const Home = () => {
                     },
                   }}
                 >
-                  Get Started Free
+                  Sign Up Free
                 </Button>
                 <Button
                   variant="outlined"

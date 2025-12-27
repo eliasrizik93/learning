@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Paper,
@@ -8,118 +7,260 @@ import {
   Button,
   Box,
   Avatar,
-  Switch,
-  FormControlLabel,
+  CircularProgress,
   Alert,
-  Autocomplete,
-  IconButton,
   Divider,
+  InputAdornment,
+  IconButton,
+  Autocomplete,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
+import {
+  Edit,
+  Save,
+  Cancel,
+  Visibility,
+  VisibilityOff,
+  CloudUpload,
+} from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { type Dayjs } from 'dayjs';
-import type { RootState } from '../../store/store';
-import { Edit, Save, Cancel } from '@mui/icons-material';
+import { useAppSelector, useAppDispatch } from '../../store/hooks/hooks';
+import { updateUser } from '../../store/slices/authSlice';
+import { apiFetch } from '../../lib/apiFetch';
+import { uploadFile } from '../../lib/uploadFile';
+import { store } from '../../store/store';
 
+// List of countries for autocomplete
 const countries = [
-  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
-  'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia',
-  'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi',
-  'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia',
-  'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic',
-  'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
-  'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia',
-  'Fiji', 'Finland', 'France',
-  'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana',
-  'Haiti', 'Honduras', 'Hungary',
-  'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy',
-  'Jamaica', 'Japan', 'Jordan',
-  'Kazakhstan', 'Kenya', 'Kiribati', 'Kosovo', 'Kuwait', 'Kyrgyzstan',
-  'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg',
-  'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius',
-  'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar',
-  'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway',
+  'Afghanistan',
+  'Albania',
+  'Algeria',
+  'Andorra',
+  'Angola',
+  'Argentina',
+  'Armenia',
+  'Australia',
+  'Austria',
+  'Azerbaijan',
+  'Bahamas',
+  'Bahrain',
+  'Bangladesh',
+  'Barbados',
+  'Belarus',
+  'Belgium',
+  'Belize',
+  'Benin',
+  'Bhutan',
+  'Bolivia',
+  'Bosnia and Herzegovina',
+  'Botswana',
+  'Brazil',
+  'Brunei',
+  'Bulgaria',
+  'Burkina Faso',
+  'Burundi',
+  'Cambodia',
+  'Cameroon',
+  'Canada',
+  'Cape Verde',
+  'Central African Republic',
+  'Chad',
+  'Chile',
+  'China',
+  'Colombia',
+  'Comoros',
+  'Congo',
+  'Costa Rica',
+  'Croatia',
+  'Cuba',
+  'Cyprus',
+  'Czech Republic',
+  'Denmark',
+  'Djibouti',
+  'Dominica',
+  'Dominican Republic',
+  'Ecuador',
+  'Egypt',
+  'El Salvador',
+  'Equatorial Guinea',
+  'Eritrea',
+  'Estonia',
+  'Eswatini',
+  'Ethiopia',
+  'Fiji',
+  'Finland',
+  'France',
+  'Gabon',
+  'Gambia',
+  'Georgia',
+  'Germany',
+  'Ghana',
+  'Greece',
+  'Grenada',
+  'Guatemala',
+  'Guinea',
+  'Guinea-Bissau',
+  'Guyana',
+  'Haiti',
+  'Honduras',
+  'Hungary',
+  'Iceland',
+  'India',
+  'Indonesia',
+  'Iran',
+  'Iraq',
+  'Ireland',
+  'Israel',
+  'Italy',
+  'Jamaica',
+  'Japan',
+  'Jordan',
+  'Kazakhstan',
+  'Kenya',
+  'Kiribati',
+  'Kosovo',
+  'Kuwait',
+  'Kyrgyzstan',
+  'Laos',
+  'Latvia',
+  'Lebanon',
+  'Lesotho',
+  'Liberia',
+  'Libya',
+  'Liechtenstein',
+  'Lithuania',
+  'Luxembourg',
+  'Madagascar',
+  'Malawi',
+  'Malaysia',
+  'Maldives',
+  'Mali',
+  'Malta',
+  'Marshall Islands',
+  'Mauritania',
+  'Mauritius',
+  'Mexico',
+  'Micronesia',
+  'Moldova',
+  'Monaco',
+  'Mongolia',
+  'Montenegro',
+  'Morocco',
+  'Mozambique',
+  'Myanmar',
+  'Namibia',
+  'Nauru',
+  'Nepal',
+  'Netherlands',
+  'New Zealand',
+  'Nicaragua',
+  'Niger',
+  'Nigeria',
+  'North Korea',
+  'North Macedonia',
+  'Norway',
   'Oman',
-  'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal',
+  'Pakistan',
+  'Palau',
+  'Palestine',
+  'Panama',
+  'Papua New Guinea',
+  'Paraguay',
+  'Peru',
+  'Philippines',
+  'Poland',
+  'Portugal',
   'Qatar',
-  'Romania', 'Russia', 'Rwanda',
-  'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe',
-  'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands',
-  'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria',
-  'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey',
-  'Turkmenistan', 'Tuvalu',
-  'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan',
-  'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam',
+  'Romania',
+  'Russia',
+  'Rwanda',
+  'Saint Kitts and Nevis',
+  'Saint Lucia',
+  'Saint Vincent and the Grenadines',
+  'Samoa',
+  'San Marino',
+  'Sao Tome and Principe',
+  'Saudi Arabia',
+  'Senegal',
+  'Serbia',
+  'Seychelles',
+  'Sierra Leone',
+  'Singapore',
+  'Slovakia',
+  'Slovenia',
+  'Solomon Islands',
+  'Somalia',
+  'South Africa',
+  'South Korea',
+  'South Sudan',
+  'Spain',
+  'Sri Lanka',
+  'Sudan',
+  'Suriname',
+  'Sweden',
+  'Switzerland',
+  'Syria',
+  'Taiwan',
+  'Tajikistan',
+  'Tanzania',
+  'Thailand',
+  'Timor-Leste',
+  'Togo',
+  'Tonga',
+  'Trinidad and Tobago',
+  'Tunisia',
+  'Turkey',
+  'Turkmenistan',
+  'Tuvalu',
+  'Uganda',
+  'Ukraine',
+  'United Arab Emirates',
+  'United Kingdom',
+  'United States',
+  'Uruguay',
+  'Uzbekistan',
+  'Vanuatu',
+  'Vatican City',
+  'Venezuela',
+  'Vietnam',
   'Yemen',
-  'Zambia', 'Zimbabwe'
+  'Zambia',
+  'Zimbabwe',
 ];
 
-interface FieldRowProps {
-  label: string;
-  value: string;
-  field: string;
-  isEditing: boolean;
-  onEdit: () => void;
-  onSave: () => void;
-  onCancel: () => void;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  type?: string;
-  multiline?: boolean;
-}
-
-const FieldRow = ({ label, value, field, isEditing, onEdit, onSave, onCancel, onChange, disabled, type, multiline }: FieldRowProps) => (
-  <Box sx={{ mb: 3, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-        {label}
-      </Typography>
-      {!disabled && (
-        <Box>
-          {!isEditing ? (
-            <IconButton size="small" onClick={onEdit} color="primary">
-              <Edit fontSize="small" />
-            </IconButton>
-          ) : (
-            <>
-              <IconButton size="small" onClick={onSave} color="success">
-                <Save fontSize="small" />
-              </IconButton>
-              <IconButton size="small" onClick={onCancel} color="error">
-                <Cancel fontSize="small" />
-              </IconButton>
-            </>
-          )}
-        </Box>
-      )}
-    </Box>
-    {isEditing ? (
-      <TextField
-        fullWidth
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        type={type || 'text'}
-        multiline={multiline}
-        rows={multiline ? 3 : 1}
-        autoFocus
-      />
-    ) : (
-      <Typography variant="body1" sx={{ color: disabled ? 'text.disabled' : 'text.primary' }}>
-        {value || '-'}
-      </Typography>
-    )}
-  </Box>
-);
-
 const Profile = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
-  const token = useSelector((state: RootState) => state.auth.token);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const token = useAppSelector((state) => state.auth.token);
+  const hydrated = useAppSelector((state) => state.auth.hydrated);
 
-  const [editingField, setEditingField] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [fetchLoading, setFetchLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const profileUrlInputRef = useRef<HTMLInputElement>(null);
+
+  // Split name into firstName and lastName
+  const splitName = (fullName: string) => {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 0) return { firstName: '', lastName: '' };
+    if (parts.length === 1) return { firstName: parts[0], lastName: '' };
+    return {
+      firstName: parts[0],
+      lastName: parts.slice(1).join(' '),
+    };
+  };
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -130,396 +271,708 @@ const Profile = () => {
     country: '',
     phoneNumber: '',
     profileVisible: true,
+  });
+
+  const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
-  const [originalData, setOriginalData] = useState(formData);
-
+  // Initialize formData from user when user becomes available
   useEffect(() => {
-    if (user) {
-      const [firstName, ...lastNameParts] = (user.name || '').split(' ');
-      const data = {
+    if (user && hydrated) {
+      const { firstName, lastName } = splitName(user.name || '');
+
+      // Convert birthday to date string format
+      let birthdayStr = '';
+      if (user.birthday) {
+        try {
+          const birthdayDate = new Date(user.birthday);
+          if (!isNaN(birthdayDate.getTime())) {
+            birthdayStr = birthdayDate.toISOString().split('T')[0];
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+
+      setFormData({
         firstName: firstName || '',
-        lastName: lastNameParts.join(' ') || '',
+        lastName: lastName || '',
         email: user.email || '',
         profile: user.profile || '',
-        birthday: user.birthday || '',
-        country: (user as any).country || '',
-        phoneNumber: (user as any).phoneNumber || '',
-        profileVisible: (user as any).profileVisible ?? true,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      };
-      setFormData(data);
-      setOriginalData(data);
+        birthday: birthdayStr,
+        country: user.country || '',
+        phoneNumber: user.phoneNumber || '',
+        profileVisible: user.profileVisible ?? true,
+      });
     }
-  }, [user]);
+  }, [user, hydrated]);
 
-  const handleSaveField = async (field: string) => {
+  // Wait for hydration to complete
+  useEffect(() => {
+    if (hydrated) {
+      setFetchLoading(false);
+    }
+  }, [hydrated]);
+
+  const handleFileUpload = async (file: File) => {
+    setUploadingProfile(true);
+    setError('');
+    try {
+      const url = await uploadFile(file);
+      setFormData({ ...formData, profile: url });
+    } catch (err) {
+      setError('Failed to upload image');
+      console.error('Upload error:', err);
+    } finally {
+      setUploadingProfile(false);
+    }
+  };
+
+  const handleSaveProfileVisibility = async (value: boolean) => {
+    if (!user || !token) return;
+
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const payload: any = {};
-      
-      if (field === 'name') {
-        payload.firstName = formData.firstName;
-        payload.lastName = formData.lastName;
-      } else if (field === 'profile') {
-        payload.profile = formData.profile || undefined;
-      } else if (field === 'birthday') {
-        payload.birthday = formData.birthday || undefined;
-      } else if (field === 'country') {
-        payload.country = formData.country || undefined;
-      } else if (field === 'phoneNumber') {
-        payload.phoneNumber = formData.phoneNumber || undefined;
-      } else if (field === 'profileVisible') {
-        payload.profileVisible = formData.profileVisible;
-      } else if (field === 'password') {
-        if (!formData.currentPassword) {
-          setError('Current password is required');
-          setLoading(false);
-          return;
-        }
-        if (formData.newPassword !== formData.confirmPassword) {
-          setError('New passwords do not match');
-          setLoading(false);
-          return;
-        }
-        if (formData.newPassword.length < 8) {
-          setError('New password must be at least 8 characters');
-          setLoading(false);
-          return;
-        }
-        payload.currentPassword = formData.currentPassword;
-        payload.password = formData.newPassword;
+      const response = await apiFetch(
+        `/users/${user.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            profileVisible: value,
+          }),
+        },
+        store.getState
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to update profile visibility');
       }
 
-      const response = await fetch(`http://localhost:3000/user/${user?.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const updatedUser = await response.json();
+
+      // Update Redux store with the updated user data
+      dispatch(updateUser(updatedUser));
+
+      setSuccess('Profile visibility updated successfully!');
+
+      setTimeout(() => {
+        setSuccess('');
+      }, 1500);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Failed to update profile visibility';
+      setError(errorMessage);
+      // Revert the toggle on error
+      setFormData({ ...formData, profileVisible: !value });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user || !token) return;
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Combine firstName and lastName into name
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+
+      const updateData: Record<string, unknown> = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        name: fullName,
+      };
+
+      if (formData.profile) {
+        updateData.profile = formData.profile;
+      }
+
+      if (formData.birthday) {
+        updateData.birthday = formData.birthday;
+      }
+
+      if (formData.country) {
+        updateData.country = formData.country;
+      }
+
+      if (formData.phoneNumber) {
+        updateData.phoneNumber = formData.phoneNumber;
+      }
+
+      updateData.profileVisible = formData.profileVisible;
+
+      // Update profile
+      const response = await apiFetch(
+        `/users/${user.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(updateData),
         },
-        body: JSON.stringify(payload),
-      });
+        store.getState
+      );
 
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || 'Failed to update profile');
       }
 
-      setSuccess(`Updated successfully!`);
-      setEditingField(null);
-      if (field === 'password') {
-        setFormData((prev) => ({
-          ...prev,
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        }));
+      const updatedUser = await response.json();
+
+      // Update password if provided
+      if (
+        passwordData.currentPassword &&
+        passwordData.newPassword &&
+        passwordData.newPassword === passwordData.confirmPassword
+      ) {
+        const passwordResponse = await apiFetch(
+          `/users/${user.id}`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({
+              password: passwordData.newPassword,
+              currentPassword: passwordData.currentPassword,
+            }),
+          },
+          store.getState
+        );
+
+        if (!passwordResponse.ok) {
+          const data = await passwordResponse.json();
+          throw new Error(data.message || 'Failed to change password');
+        }
       }
+
+      // Update Redux store with the updated user data
+      dispatch(updateUser(updatedUser));
+
+      setSuccess('Profile updated successfully!');
+      setEditMode(false);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+
       setTimeout(() => {
         setSuccess('');
-        window.location.reload();
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update profile');
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to update profile';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancelEdit = () => {
-    setFormData(originalData);
-    setEditingField(null);
+  const handleCancel = () => {
+    if (user) {
+      const { firstName, lastName } = splitName(user.name || '');
+      setFormData({
+        firstName,
+        lastName,
+        email: user.email || '',
+        profile: user.profile || '',
+        birthday: user.birthday
+          ? new Date(user.birthday).toISOString().split('T')[0]
+          : '',
+        country: user.country || '',
+        phoneNumber: user.phoneNumber || '',
+        profileVisible: user.profileVisible ?? true,
+      });
+    }
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setEditMode(false);
     setError('');
   };
 
-  if (!user) {
+  // Wait for hydration before showing anything
+  if (!hydrated || fetchLoading) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Typography>Please log in to view your profile</Typography>
+      <Container maxWidth='md' sx={{ py: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+          <CircularProgress />
+        </Paper>
+      </Container>
+    );
+  }
+
+  if (!user || !token) {
+    return (
+      <Container maxWidth='md' sx={{ py: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant='h6'>
+            Please log in to view your profile
+          </Typography>
+        </Paper>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 4 }}>
-          My Profile
-        </Typography>
+    <Container maxWidth='md' sx={{ py: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3,
+          }}
+        >
+          <Typography variant='h4' sx={{ fontWeight: 700 }}>
+            My Profile
+          </Typography>
+          {!editMode ? (
+            <Button
+              variant='contained'
+              startIcon={<Edit />}
+              onClick={() => setEditMode(true)}
+            >
+              Edit Profile
+            </Button>
+          ) : (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant='contained'
+                color='success'
+                startIcon={<Save />}
+                onClick={handleSave}
+                disabled={loading}
+              >
+                Save
+              </Button>
+              <Button
+                variant='outlined'
+                color='error'
+                startIcon={<Cancel />}
+                onClick={handleCancel}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            </Box>
+          )}
+        </Box>
 
         {success && (
-          <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess('')}>
+          <Alert
+            severity='success'
+            sx={{ mb: 3 }}
+            onClose={() => setSuccess('')}
+          >
             {success}
           </Alert>
         )}
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+          <Alert severity='error' sx={{ mb: 3 }} onClose={() => setError('')}>
             {error}
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
-          <Box sx={{ position: 'relative' }}>
-            <Avatar
-              src={formData.profile || undefined}
-              alt={`${formData.firstName} ${formData.lastName}`}
-              sx={{ width: 120, height: 120, fontSize: 48 }}
-            >
-              {!formData.profile && formData.firstName.charAt(0).toUpperCase()}
-            </Avatar>
-            <IconButton
-              size="small"
-              onClick={() => setEditingField('profile')}
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <CircularProgress />
+          </Box>
+        )}
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mb: 4,
+          }}
+        >
+          <Avatar
+            src={formData.profile || undefined}
+            alt={`${formData.firstName} ${formData.lastName}`}
+            sx={{ width: 120, height: 120, fontSize: 48, mb: 2 }}
+          >
+            {!formData.profile &&
+              (
+                formData.firstName.charAt(0) ||
+                formData.lastName.charAt(0) ||
+                'U'
+              ).toUpperCase()}
+          </Avatar>
+          {editMode ? (
+            <Box
               sx={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                bgcolor: 'primary.main',
-                color: 'white',
-                '&:hover': { bgcolor: 'primary.dark' },
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+                width: '100%',
+                maxWidth: 400,
               }}
             >
-              <Edit fontSize="small" />
-            </IconButton>
-          </Box>
-          {editingField === 'profile' && (
-            <Box sx={{ mt: 2, width: '100%', maxWidth: 400 }}>
+              <Button
+                variant='outlined'
+                component='label'
+                startIcon={<CloudUpload />}
+                disabled={uploadingProfile}
+              >
+                {uploadingProfile ? 'Uploading...' : 'Upload from PC'}
+                <input
+                  type='file'
+                  hidden
+                  accept='image/*'
+                  ref={fileInputRef}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleFileUpload(file);
+                    }
+                  }}
+                />
+              </Button>
               <TextField
                 fullWidth
-                label="Profile Picture URL"
+                label='Or enter image URL'
                 value={formData.profile}
-                onChange={(e) => setFormData(prev => ({ ...prev, profile: e.target.value }))}
-                placeholder="Enter image URL"
-                size="small"
-                sx={{ mb: 1 }}
+                inputRef={profileUrlInputRef}
+                onChange={(e) =>
+                  setFormData({ ...formData, profile: e.target.value })
+                }
+                placeholder='https://example.com/image.jpg'
+                size='small'
               />
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  onClick={() => handleSaveField('profile')}
-                  startIcon={<Save />}
-                >
-                  Save
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  onClick={() => handleCancelEdit()}
-                  startIcon={<Cancel />}
-                >
-                  Cancel
-                </Button>
-              </Box>
             </Box>
+          ) : (
+            <Typography variant='body2' color='text.secondary'>
+              {formData.profile ? 'Click edit to change' : 'No profile picture'}
+            </Typography>
           )}
         </Box>
 
         <Divider sx={{ mb: 3 }} />
 
-        <FieldRow
-          label="First Name"
-          value={formData.firstName}
-          field="firstName"
-          isEditing={editingField === 'name'}
-          onEdit={() => setEditingField('name')}
-          onSave={() => handleSaveField('name')}
-          onCancel={() => handleCancelEdit()}
-          onChange={(value) => setFormData(prev => ({ ...prev, firstName: value }))}
-        />
-
-        <FieldRow
-          label="Last Name"
-          value={formData.lastName}
-          field="lastName"
-          isEditing={editingField === 'name'}
-          onEdit={() => setEditingField('name')}
-          onSave={() => handleSaveField('name')}
-          onCancel={() => handleCancelEdit()}
-          onChange={(value) => setFormData(prev => ({ ...prev, lastName: value }))}
-        />
-
-        <FieldRow
-          label="Email"
-          value={formData.email}
-          field="email"
-          isEditing={false}
-          onEdit={() => {}}
-          onSave={() => {}}
-          onCancel={() => {}}
-          onChange={() => {}}
-          disabled
-        />
-
-        <FieldRow
-          label="Phone Number"
-          value={formData.phoneNumber}
-          field="phoneNumber"
-          isEditing={editingField === 'phoneNumber'}
-          onEdit={() => setEditingField('phoneNumber')}
-          onSave={() => handleSaveField('phoneNumber')}
-          onCancel={() => handleCancelEdit()}
-          onChange={(value) => setFormData(prev => ({ ...prev, phoneNumber: value }))}
-          type="tel"
-        />
-
-        <Box sx={{ mb: 3, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-              Country
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box>
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              sx={{ mb: 1 }}
+            >
+              First Name
             </Typography>
-            <Box>
-              {editingField !== 'country' ? (
-                <IconButton size="small" onClick={() => setEditingField('country')} color="primary">
-                  <Edit fontSize="small" />
-                </IconButton>
-              ) : (
-                <>
-                  <IconButton size="small" onClick={() => handleSaveField('country')} color="success">
-                    <Save fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleCancelEdit()} color="error">
-                    <Cancel fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            {editMode ? (
+              <TextField
+                fullWidth
+                value={formData.firstName}
+                onChange={(e) =>
+                  setFormData({ ...formData, firstName: e.target.value })
+                }
+                placeholder='Enter your first name'
+              />
+            ) : (
+              <Typography variant='body1' sx={{ fontSize: '1.1rem' }}>
+                {formData.firstName || '-'}
+              </Typography>
+            )}
           </Box>
-          {editingField === 'country' ? (
-            <Autocomplete
-              options={countries}
-              value={formData.country || null}
-              onChange={(_, newValue) => setFormData(prev => ({ ...prev, country: newValue || '' }))}
-              renderInput={(params) => <TextField {...params} placeholder="Select country" />}
-              freeSolo
-              fullWidth
-            />
-          ) : (
-            <Typography variant="body1">{formData.country || '-'}</Typography>
-          )}
-        </Box>
 
-        <Box sx={{ mb: 3, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+          <Box>
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              sx={{ mb: 1 }}
+            >
+              Last Name
+            </Typography>
+            {editMode ? (
+              <TextField
+                fullWidth
+                value={formData.lastName}
+                onChange={(e) =>
+                  setFormData({ ...formData, lastName: e.target.value })
+                }
+                placeholder='Enter your last name'
+              />
+            ) : (
+              <Typography variant='body1' sx={{ fontSize: '1.1rem' }}>
+                {formData.lastName || '-'}
+              </Typography>
+            )}
+          </Box>
+
+          <Box>
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              sx={{ mb: 1 }}
+            >
+              Email
+            </Typography>
+            <Typography
+              variant='body1'
+              sx={{ fontSize: '1.1rem', color: 'text.disabled' }}
+            >
+              {formData.email || '-'}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              Email cannot be changed
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              sx={{ mb: 1 }}
+            >
+              Password
+            </Typography>
+            {editMode ? (
+              <>
+                <TextField
+                  fullWidth
+                  label='Current Password'
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      currentPassword: e.target.value,
+                    })
+                  }
+                  sx={{ mb: 2 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge='end'
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label='New Password'
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={passwordData.newPassword}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      newPassword: e.target.value,
+                    })
+                  }
+                  helperText='Password must be at least 8 characters'
+                  sx={{ mb: 2 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <IconButton
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          edge='end'
+                        >
+                          {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label='Confirm New Password'
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  error={
+                    passwordData.confirmPassword !== '' &&
+                    passwordData.newPassword !== passwordData.confirmPassword
+                  }
+                  helperText={
+                    passwordData.confirmPassword !== '' &&
+                    passwordData.newPassword !== passwordData.confirmPassword
+                      ? 'Passwords do not match'
+                      : ''
+                  }
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <IconButton
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                          edge='end'
+                        >
+                          {showConfirmPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </>
+            ) : (
+              <Typography variant='body1' sx={{ fontSize: '1.1rem' }}>
+                ••••••••
+              </Typography>
+            )}
+          </Box>
+
+          <Box>
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              sx={{ mb: 1 }}
+            >
               Birthday
             </Typography>
-            <Box>
-              {editingField !== 'birthday' ? (
-                <IconButton size="small" onClick={() => setEditingField('birthday')} color="primary">
-                  <Edit fontSize="small" />
-                </IconButton>
-              ) : (
-                <>
-                  <IconButton size="small" onClick={() => handleSaveField('birthday')} color="success">
-                    <Save fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleCancelEdit()} color="error">
-                    <Cancel fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            {editMode ? (
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  value={formData.birthday ? dayjs(formData.birthday) : null}
+                  onChange={(date: Dayjs | null) => {
+                    setFormData({
+                      ...formData,
+                      birthday: date ? date.format('YYYY-MM-DD') : '',
+                    });
+                  }}
+                  maxDate={dayjs()}
+                  minDate={dayjs('1900-01-01')}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            ) : (
+              <Typography variant='body1' sx={{ fontSize: '1.1rem' }}>
+                {formData.birthday || '-'}
+              </Typography>
+            )}
           </Box>
-          {editingField === 'birthday' ? (
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                value={formData.birthday ? dayjs(formData.birthday) : null}
-                onChange={(date: Dayjs | null) => setFormData(prev => ({ ...prev, birthday: date ? date.format('YYYY-MM-DD') : '' }))}
-                maxDate={dayjs()}
-                minDate={dayjs('1900-01-01')}
-                slotProps={{ textField: { fullWidth: true } }}
-              />
-            </LocalizationProvider>
-          ) : (
-            <Typography variant="body1">{formData.birthday || '-'}</Typography>
-          )}
-        </Box>
 
-        <Box sx={{ mb: 3, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-              Profile Visibility
+          <Box>
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              sx={{ mb: 1 }}
+            >
+              Country
             </Typography>
-            <Box>
-              {editingField !== 'profileVisible' ? (
-                <IconButton size="small" onClick={() => setEditingField('profileVisible')} color="primary">
-                  <Edit fontSize="small" />
-                </IconButton>
-              ) : (
-                <>
-                  <IconButton size="small" onClick={() => handleSaveField('profileVisible')} color="success">
-                    <Save fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleCancelEdit()} color="error">
-                    <Cancel fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
-          </Box>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.profileVisible}
-                onChange={(e) => setFormData(prev => ({ ...prev, profileVisible: e.target.checked }))}
-                disabled={editingField !== 'profileVisible'}
+            {editMode ? (
+              <Autocomplete
+                options={countries}
+                value={formData.country || null}
+                onChange={(_, newValue) => {
+                  setFormData({ ...formData, country: newValue || '' });
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder='Type to search...'
+                    fullWidth
+                  />
+                )}
+                freeSolo
+                fullWidth
               />
-            }
-            label={formData.profileVisible ? 'Public' : 'Private'}
-          />
+            ) : (
+              <Typography variant='body1' sx={{ fontSize: '1.1rem' }}>
+                {formData.country || '-'}
+              </Typography>
+            )}
+          </Box>
+
+          <Box>
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              sx={{ mb: 1 }}
+            >
+              Phone Number
+            </Typography>
+            {editMode ? (
+              <TextField
+                fullWidth
+                type='tel'
+                value={formData.phoneNumber}
+                onChange={(e) =>
+                  setFormData({ ...formData, phoneNumber: e.target.value })
+                }
+                placeholder='+1 234 567 8900'
+              />
+            ) : (
+              <Typography variant='body1' sx={{ fontSize: '1.1rem' }}>
+                {formData.phoneNumber || '-'}
+              </Typography>
+            )}
+          </Box>
+
+          <Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.profileVisible}
+                  onChange={(e) => {
+                    const newValue = e.target.checked;
+                    setFormData({
+                      ...formData,
+                      profileVisible: newValue,
+                    });
+                    // Auto-save when toggled
+                    handleSaveProfileVisibility(newValue);
+                  }}
+                  color='primary'
+                  disabled={loading}
+                />
+              }
+              label='Make my profile visible to others'
+              sx={{ mt: 2, mb: 1 }}
+            />
+          </Box>
+
+          <Box>
+            <Divider sx={{ my: 2 }} />
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              sx={{ mb: 1 }}
+            >
+              Member Since
+            </Typography>
+            <Typography variant='body1' sx={{ fontSize: '1.1rem' }}>
+              {new Date(user.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </Typography>
+          </Box>
         </Box>
-
-        <Divider sx={{ my: 3 }} />
-
-        <Typography variant="h6" sx={{ mb: 2 }}>Change Password</Typography>
-        
-        <TextField
-          fullWidth
-          type="password"
-          label="Current Password"
-          value={formData.currentPassword}
-          onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
-          sx={{ mb: 2 }}
-        />
-
-        <TextField
-          fullWidth
-          type="password"
-          label="New Password"
-          value={formData.newPassword}
-          onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
-          helperText="At least 8 characters"
-          sx={{ mb: 2 }}
-        />
-
-        <TextField
-          fullWidth
-          type="password"
-          label="Confirm New Password"
-          value={formData.confirmPassword}
-          onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-          sx={{ mb: 2 }}
-        />
-
-        <Button
-          variant="contained"
-          onClick={() => handleSaveField('password')}
-          disabled={loading || !formData.currentPassword || !formData.newPassword}
-        >
-          Update Password
-        </Button>
       </Paper>
     </Container>
   );
