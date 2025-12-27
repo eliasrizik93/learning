@@ -13,6 +13,7 @@ import { EventsModule } from './events/events.module';
 import { NotificationModule } from './notification/notification.module';
 import { SupportModule } from './support/support.module';
 import { DiscoverModule } from './discover/discover.module';
+import { DownloadModule } from './download/download.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DiscoverModule } from './discover/discover.module';
     NotificationModule,
     SupportModule,
     DiscoverModule,
+    DownloadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

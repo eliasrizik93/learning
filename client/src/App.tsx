@@ -14,6 +14,7 @@ import Profile from './Components/Profile/Profile';
 import Settings from './Components/Settings/Settings';
 import Discover from './Components/Discover/Discover';
 import Support from './Components/Support/Support';
+import Download from './Components/Download/Download';
 import { useSocket } from './hooks/useSocket';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
     <Routes>
       <Route path='/' element={<Layout />}>
         <Route index element={<Home />} />
+        <Route path='download' element={<Download />} />
         <Route element={<PublicOnly />}>
           <Route path='signup' element={<SignUp />} />
           <Route path='signin' element={<SignIn />} />

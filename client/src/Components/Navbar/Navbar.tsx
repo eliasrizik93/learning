@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
 import type { AppDispatch, RootState } from '../../store/store';
 import { logout as logoutAction } from '../../store/slices/authSlice';
-import { School, LogoutRounded, Devices, Person, Settings, Public, Support } from '@mui/icons-material';
+import { School, LogoutRounded, Devices, Person, Settings, Public, Support, Download } from '@mui/icons-material';
 import { useState } from 'react';
 import Notifications from '../Notifications/Notifications';
 
@@ -124,6 +124,22 @@ const Navbar = () => {
               </Button>
             </>
           )}
+
+          <Button
+            component={NavLink}
+            to='/download'
+            startIcon={<Download />}
+            sx={{
+              color: 'white',
+              fontWeight: 500,
+              textTransform: 'none',
+              ml: isAuth ? 0 : 2,
+              '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' },
+              '&.active': { backgroundColor: 'rgba(255,255,255,0.2)' },
+            }}
+          >
+            Download
+          </Button>
         </Box>
 
         {/* Right Side - User info and logout */}

@@ -218,3 +218,16 @@ model TicketReply {
 
   @@index([ticketId])
 }
+
+// Download tracking
+model DownloadLog {
+  id           String   @id @default(uuid())
+  fileName     String
+  userId       Int?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([fileName])
+  @@index([userId])
+}
